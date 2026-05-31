@@ -7,65 +7,118 @@ public sealed class MainMenuForm : Form
         UiTheme.ApplyFormTheme(this);
 
         Text = "Госпіталь - головне меню";
-        Width = 920;
-        Height = 760;
-        MinimumSize = new Size(820, 680);
+        Width = 1040;
+        Height = 740;
+        MinimumSize = new Size(1000, 720);
         StartPosition = FormStartPosition.CenterScreen;
 
         var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(28),
+            Padding = new Padding(22),
             ColumnCount = 1,
-            RowCount = 1
+            RowCount = 2
         };
         UiTheme.ApplyTableLayoutDefaults(root);
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 148));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
+        root.Controls.Add(CreateHeaderCard(), 0, 0);
+        root.Controls.Add(CreateDashboard(), 0, 1);
+
+        Controls.Add(root);
+    }
+
+    private static Control CreateHeaderCard()
+    {
         var card = UiTheme.CreateCardPanel();
         card.Dock = DockStyle.Fill;
-        card.Margin = new Padding(0);
+        card.Margin = new Padding(0, 0, 0, 14);
+        card.Padding = new Padding(24, 16, 24, 16);
 
-        var content = new TableLayoutPanel
+        var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 7
+            RowCount = 3
         };
-        UiTheme.ApplyTableLayoutDefaults(content);
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
-        content.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
+        UiTheme.ApplyTableLayoutDefaults(layout);
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var title = UiTheme.CreateHeaderLabel("База даних госпіталя");
-        var subtitle = UiTheme.CreateSubHeaderLabel("Навчальний застосунок для роботи з PostgreSQL БД");
-        var dataSection = UiTheme.CreateSectionLabel("Дані");
-        var querySection = UiTheme.CreateSectionLabel("Запити");
+        title.TextAlign = ContentAlignment.MiddleLeft;
 
-        var tableButtons = new TableLayoutPanel
+        var subtitle = UiTheme.CreateSubHeaderLabel("Навчальний застосунок для роботи з PostgreSQL БД");
+        subtitle.TextAlign = ContentAlignment.MiddleLeft;
+
+        var description = new Label
+        {
+            Text = "Форми введення даних, зв'язки між сутностями, параметризовані запити та запити з множинними порівняннями.",
+            Dock = DockStyle.Fill,
+            Font = UiTheme.TextFont,
+            ForeColor = UiTheme.MutedText,
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true
+        };
+
+        layout.Controls.Add(title, 0, 0);
+        layout.Controls.Add(subtitle, 0, 1);
+        layout.Controls.Add(description, 0, 2);
+        card.Controls.Add(layout);
+
+        return card;
+    }
+
+    private Control CreateDashboard()
+    {
+        var dashboard = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            AutoScroll = true,
-            Padding = new Padding(0, 4, 0, 4)
+            RowCount = 3
         };
-        UiTheme.ApplyTableLayoutDefaults(tableButtons);
-        tableButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        tableButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        UiTheme.ApplyTableLayoutDefaults(dashboard);
+        dashboard.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        dashboard.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        dashboard.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
+        dashboard.RowStyles.Add(new RowStyle(SizeType.Percent, 38));
+        dashboard.RowStyles.Add(new RowStyle(SizeType.Percent, 20));
 
-        var tableIndex = 0;
-        foreach (var config in TableConfigs.All)
+        dashboard.Controls.Add(CreateNavigationCard(
+            "Основні дані",
+            new[] { "departments", "doctors", "patients", "rooms" },
+            primary: false), 0, 0);
+
+        dashboard.Controls.Add(CreateNavigationCard(
+            "Медичні події та зв'язки",
+            new[] { "visit_records", "appointments", "doctor_consultations" },
+            primary: false), 1, 0);
+
+        dashboard.Controls.Add(CreateNavigationCard(
+            "Спеціалізації лікарів",
+            new[] { "therapists", "surgeons" },
+            primary: false), 0, 1);
+
+        dashboard.Controls.Add(CreateQueriesCard(), 1, 1);
+
+        var systemCard = CreateSystemCard();
+        dashboard.Controls.Add(systemCard, 0, 2);
+        dashboard.SetColumnSpan(systemCard, 2);
+
+        return dashboard;
+    }
+
+    private Control CreateNavigationCard(string title, IEnumerable<string> tableNames, bool primary)
+    {
+        var card = CreateDashboardCard(title);
+        var panel = CreateButtonPanel();
+
+        foreach (var tableName in tableNames)
         {
-            var button = new Button
-            {
-                Text = config.Title,
-                Dock = DockStyle.Fill,
-                Height = UiTheme.ButtonHeight
-            };
-            UiTheme.StyleSecondaryButton(button);
+            var config = TableConfigs.All.First(item => item.TableName == tableName);
+            var button = CreateDashboardButton(config.Title, primary);
 
             button.Click += (_, _) =>
             {
@@ -73,56 +126,97 @@ public sealed class MainMenuForm : Form
                 form.ShowDialog(this);
             };
 
-            var row = tableIndex / 2;
-            var column = tableIndex % 2;
-
-            if (tableButtons.RowStyles.Count <= row)
-                tableButtons.RowStyles.Add(new RowStyle(SizeType.Absolute, UiTheme.ButtonHeight + 14));
-
-            tableButtons.Controls.Add(button, column, row);
-            tableIndex++;
+            panel.Controls.Add(button);
         }
 
-        var queriesButton = new Button
-        {
-            Text = "Запити",
-            Dock = DockStyle.Fill
-        };
-        UiTheme.StylePrimaryButton(queriesButton);
+        card.Controls.Add(panel);
+        return card;
+    }
 
+    private Control CreateQueriesCard()
+    {
+        var card = CreateDashboardCard("Аналітика");
+        var panel = CreateButtonPanel();
+
+        var queriesButton = CreateDashboardButton("Запити", primary: true);
         queriesButton.Click += (_, _) =>
         {
             using var form = new QueriesForm();
             form.ShowDialog(this);
         };
 
-        var systemPanel = new FlowLayoutPanel
+        panel.Controls.Add(queriesButton);
+        card.Controls.Add(panel);
+        return card;
+    }
+
+    private Control CreateSystemCard()
+    {
+        var card = CreateDashboardCard("Система");
+        card.Margin = new Padding(0, 10, 0, 0);
+
+        var panel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(0, 8, 0, 0)
+            WrapContents = false,
+            Padding = new Padding(0, 12, 0, 0)
         };
-        UiTheme.ApplyFlowLayoutDefaults(systemPanel);
+        UiTheme.ApplyFlowLayoutDefaults(panel);
 
-        var exitButton = new Button
-        {
-            Text = "Вихід",
-            Width = 180
-        };
+        var exitButton = CreateDashboardButton("Вихід", primary: false);
         UiTheme.StyleDangerButton(exitButton);
         exitButton.Click += (_, _) => Close();
-        systemPanel.Controls.Add(exitButton);
 
-        content.Controls.Add(title, 0, 0);
-        content.Controls.Add(subtitle, 0, 1);
-        content.Controls.Add(dataSection, 0, 2);
-        content.Controls.Add(tableButtons, 0, 3);
-        content.Controls.Add(querySection, 0, 4);
-        content.Controls.Add(queriesButton, 0, 5);
-        content.Controls.Add(systemPanel, 0, 6);
+        panel.Controls.Add(exitButton);
+        card.Controls.Add(panel);
+        return card;
+    }
 
-        card.Controls.Add(content);
-        root.Controls.Add(card, 0, 0);
-        Controls.Add(root);
+    private static Panel CreateDashboardCard(string title)
+    {
+        var card = UiTheme.CreateCardPanel();
+        card.Dock = DockStyle.Fill;
+        card.Margin = new Padding(0, 0, 14, 14);
+        card.Padding = new Padding(18, 48, 18, 16);
+
+        var titleLabel = UiTheme.CreateSectionLabel(title);
+        titleLabel.Dock = DockStyle.Top;
+        titleLabel.Height = 36;
+        titleLabel.Padding = new Padding(18, 4, 0, 0);
+        card.Controls.Add(titleLabel);
+
+        return card;
+    }
+
+    private static FlowLayoutPanel CreateButtonPanel()
+    {
+        var panel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            AutoScroll = false,
+            Padding = new Padding(0)
+        };
+        UiTheme.ApplyFlowLayoutDefaults(panel);
+        return panel;
+    }
+
+    private static Button CreateDashboardButton(string text, bool primary)
+    {
+        var button = new Button
+        {
+            Text = text,
+            Width = 210,
+            Height = UiTheme.ButtonHeight
+        };
+
+        if (primary)
+            UiTheme.StylePrimaryButton(button);
+        else
+            UiTheme.StyleSecondaryButton(button);
+
+        return button;
     }
 }

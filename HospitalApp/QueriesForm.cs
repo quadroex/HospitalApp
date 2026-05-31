@@ -57,6 +57,9 @@ public sealed class QueriesForm : Form
             panel.Controls.Add(CreateQueryPanel(queries[index]));
         }
 
+        panel.SizeChanged += (_, _) => ResizeQueryCards(panel);
+        ResizeQueryCards(panel);
+
         listCard.Controls.Add(panel);
 
         var closeButton = new Button
@@ -90,19 +93,21 @@ public sealed class QueriesForm : Form
     private static Control CreateSectionHeader(string text)
     {
         var label = UiTheme.CreateSectionLabel(text);
-        label.Width = 930;
+        label.Width = 780;
         label.Height = 34;
         label.Margin = new Padding(4, 4, 4, 8);
+        label.Tag = "resizable";
         return label;
     }
 
     private Control CreateQueryPanel(QueryConfig query)
     {
         var container = UiTheme.CreateCardPanel();
-        container.Width = 930;
+        container.Width = 780;
         container.Height = 132;
         container.Margin = new Padding(4, 0, 4, 12);
         container.Padding = new Padding(14);
+        container.Tag = "resizable";
 
         var layout = new TableLayoutPanel
         {
@@ -152,6 +157,16 @@ public sealed class QueriesForm : Form
 
         container.Controls.Add(layout);
         return container;
+    }
+
+    private static void ResizeQueryCards(FlowLayoutPanel panel)
+    {
+        var width = Math.Max(720, panel.ClientSize.Width - 28);
+        foreach (Control control in panel.Controls)
+        {
+            if (Equals(control.Tag, "resizable"))
+                control.Width = width;
+        }
     }
 
     private void RunQuery(QueryConfig query)
