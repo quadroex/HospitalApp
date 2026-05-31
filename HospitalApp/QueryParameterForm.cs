@@ -11,49 +11,72 @@ public sealed class QueryParameterForm : Form
 
     public QueryParameterForm(QueryConfig config)
     {
+        UiTheme.ApplyFormTheme(this);
         _config = config;
 
         Text = _config.Title;
-        Width = 560;
-        Height = 360;
+        Width = 620;
+        Height = 420;
+        MinimumSize = new Size(560, 340);
         StartPosition = FormStartPosition.CenterParent;
+
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(UiTheme.FormPadding),
+            ColumnCount = 1,
+            RowCount = 3
+        };
+        UiTheme.ApplyTableLayoutDefaults(root);
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+
+        var headerCard = UiTheme.CreateCardPanel();
+        headerCard.Dock = DockStyle.Fill;
+        headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        headerCard.Padding = new Padding(14, 6, 14, 6);
+        headerCard.Controls.Add(UiTheme.CreateHeaderLabel("Параметри запиту"));
+
+        var fieldsCard = UiTheme.CreateCardPanel();
+        fieldsCard.Dock = DockStyle.Fill;
+        fieldsCard.Margin = new Padding(0);
+        fieldsCard.Padding = new Padding(18);
 
         var panel = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            AutoScroll = true,
-            Padding = new Padding(12)
+            AutoScroll = true
         };
-
+        UiTheme.ApplyTableLayoutDefaults(panel);
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
 
+        var row = 0;
         foreach (var parameter in _config.Parameters)
         {
-            var label = new Label
-            {
-                Text = parameter.Label,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = true
-            };
+            var label = UiTheme.CreateFieldLabel(parameter.Label);
 
             var control = CreateControl(parameter);
             control.Dock = DockStyle.Fill;
+            UiTheme.StyleInput(control);
             _controls[parameter.Name] = control;
 
-            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            panel.Controls.Add(label);
-            panel.Controls.Add(control);
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+            panel.Controls.Add(label, 0, row);
+            panel.Controls.Add(control, 1, row);
+            row++;
         }
+
+        fieldsCard.Controls.Add(panel);
 
         var runButton = new Button
         {
             Text = "Виконати",
-            Width = 120,
-            Height = 35
+            Width = 130
         };
+        UiTheme.StylePrimaryButton(runButton);
 
         runButton.Click += (_, _) =>
         {
@@ -72,24 +95,31 @@ public sealed class QueryParameterForm : Form
         var cancelButton = new Button
         {
             Text = "Скасувати",
-            Width = 120,
-            Height = 35,
+            Width = 130,
             DialogResult = DialogResult.Cancel
         };
+        UiTheme.StyleSecondaryButton(cancelButton);
+
+        var buttonsCard = UiTheme.CreateCardPanel();
+        buttonsCard.Dock = DockStyle.Fill;
+        buttonsCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
+        buttonsCard.Padding = new Padding(10, 8, 10, 8);
 
         var buttons = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 55,
-            FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(12)
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft
         };
+        UiTheme.ApplyFlowLayoutDefaults(buttons);
 
         buttons.Controls.Add(cancelButton);
         buttons.Controls.Add(runButton);
+        buttonsCard.Controls.Add(buttons);
 
-        Controls.Add(panel);
-        Controls.Add(buttons);
+        root.Controls.Add(headerCard, 0, 0);
+        root.Controls.Add(fieldsCard, 0, 1);
+        root.Controls.Add(buttonsCard, 0, 2);
+        Controls.Add(root);
 
         AcceptButton = runButton;
         CancelButton = cancelButton;
@@ -128,9 +158,6 @@ public sealed class QueryParameterForm : Form
             ValueMember = parameter.Lookup.ValueMember,
             DisplayMember = parameter.Lookup.DisplayMember
         };
-
-        if (data.Rows.Count > 0)
-            comboBox.SelectedIndex = 0;
 
         return comboBox;
     }

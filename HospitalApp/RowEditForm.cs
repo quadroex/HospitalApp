@@ -12,54 +12,76 @@ public sealed class RowEditForm : Form
 
     public RowEditForm(TableConfig config, DataRowView? existingRow = null)
     {
+        UiTheme.ApplyFormTheme(this);
         _config = config;
         _editMode = existingRow != null;
 
         Text = _editMode ? $"Редагування: {_config.Title}" : $"Додавання: {_config.Title}";
-        Width = 600;
-        Height = 520;
+        Width = 660;
+        Height = 560;
+        MinimumSize = new Size(580, 480);
         StartPosition = FormStartPosition.CenterParent;
+
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(UiTheme.FormPadding),
+            ColumnCount = 1,
+            RowCount = 3
+        };
+        UiTheme.ApplyTableLayoutDefaults(root);
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
+
+        var headerCard = UiTheme.CreateCardPanel();
+        headerCard.Dock = DockStyle.Fill;
+        headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        headerCard.Padding = new Padding(14, 6, 14, 6);
+        headerCard.Controls.Add(UiTheme.CreateHeaderLabel(Text));
+
+        var fieldsCard = UiTheme.CreateCardPanel();
+        fieldsCard.Dock = DockStyle.Fill;
+        fieldsCard.Margin = new Padding(0);
+        fieldsCard.Padding = new Padding(18);
 
         var panel = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            AutoScroll = true,
-            Padding = new Padding(12)
+            AutoScroll = true
         };
+        UiTheme.ApplyTableLayoutDefaults(panel);
 
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
 
+        var row = 0;
         foreach (var column in _config.Columns)
         {
-            var label = new Label
-            {
-                Text = column.Label,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = true
-            };
+            var label = UiTheme.CreateFieldLabel(column.Label);
 
             var control = CreateControl(column, existingRow);
             control.Dock = DockStyle.Fill;
+            UiTheme.StyleInput(control);
 
             if (_editMode && column.IsPrimaryKey)
                 control.Enabled = false;
 
             _controls[column.Name] = control;
 
-            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            panel.Controls.Add(label);
-            panel.Controls.Add(control);
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+            panel.Controls.Add(label, 0, row);
+            panel.Controls.Add(control, 1, row);
+            row++;
         }
 
         var saveButton = new Button
         {
             Text = "Зберегти",
-            Width = 120,
-            Height = 35
+            Width = 130
         };
+        UiTheme.StylePrimaryButton(saveButton);
 
         saveButton.Click += (_, _) =>
         {
@@ -78,24 +100,33 @@ public sealed class RowEditForm : Form
         var cancelButton = new Button
         {
             Text = "Скасувати",
-            Width = 120,
-            Height = 35,
+            Width = 130,
             DialogResult = DialogResult.Cancel
         };
+        UiTheme.StyleSecondaryButton(cancelButton);
+
+        var buttonsCard = UiTheme.CreateCardPanel();
+        buttonsCard.Dock = DockStyle.Fill;
+        buttonsCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
+        buttonsCard.Padding = new Padding(10, 8, 10, 8);
 
         var buttons = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 55,
+            Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(12)
         };
+        UiTheme.ApplyFlowLayoutDefaults(buttons);
 
         buttons.Controls.Add(cancelButton);
         buttons.Controls.Add(saveButton);
 
-        Controls.Add(panel);
-        Controls.Add(buttons);
+        fieldsCard.Controls.Add(panel);
+        buttonsCard.Controls.Add(buttons);
+
+        root.Controls.Add(headerCard, 0, 0);
+        root.Controls.Add(fieldsCard, 0, 1);
+        root.Controls.Add(buttonsCard, 0, 2);
+        Controls.Add(root);
 
         AcceptButton = saveButton;
         CancelButton = cancelButton;

@@ -20,107 +20,130 @@ public sealed class DepartmentWithHeadForm : Form
 
     public DepartmentWithHeadForm()
     {
+        UiTheme.ApplyFormTheme(this);
+
         Text = "Додати відділення із завідувачем";
-        Width = 620;
-        Height = 500;
+        Width = 720;
+        Height = 640;
+        MinimumSize = new Size(640, 560);
         StartPosition = FormStartPosition.CenterParent;
 
-        var title = new Label
-        {
-            Text = "Нове відділення та його завідувач",
-            Dock = DockStyle.Top,
-            Height = 45,
-            Font = new Font(Font.FontFamily, 13, FontStyle.Bold),
-            TextAlign = ContentAlignment.MiddleCenter
-        };
-
-        var panel = new TableLayoutPanel
+        var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            AutoScroll = true,
-            Padding = new Padding(12)
+            Padding = new Padding(UiTheme.FormPadding),
+            ColumnCount = 1,
+            RowCount = 4
         };
+        UiTheme.ApplyTableLayoutDefaults(root);
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 128));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
 
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
+        var headerCard = UiTheme.CreateCardPanel();
+        headerCard.Dock = DockStyle.Fill;
+        headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        headerCard.Padding = new Padding(14, 6, 14, 6);
+        headerCard.Controls.Add(UiTheme.CreateHeaderLabel("Нове відділення та його завідувач"));
 
-        AddField(panel, "Назва відділення", _departmentNameBox);
-        AddField(panel, "Поверх", _floorBox);
-        AddSeparator(panel, "Завідувач");
-        AddField(panel, "Паспорт", _passportBox);
-        AddField(panel, "Прізвище", _lastNameBox);
-        AddField(panel, "Ім'я", _firstNameBox);
-        AddField(panel, "По батькові", _middleNameBox);
-        AddField(panel, "Спеціалізація", _specializationBox);
+        var departmentCard = CreateSectionCard("Відділення");
+        var departmentPanel = CreateFieldsPanel();
+        AddField(departmentPanel, "Назва відділення", _departmentNameBox, 0);
+        AddField(departmentPanel, "Поверх", _floorBox, 1);
+        departmentCard.Controls.Add(departmentPanel);
+
+        var doctorCard = CreateSectionCard("Завідувач-лікар");
+        var doctorPanel = CreateFieldsPanel();
+        AddField(doctorPanel, "Паспорт", _passportBox, 0);
+        AddField(doctorPanel, "Прізвище", _lastNameBox, 1);
+        AddField(doctorPanel, "Ім'я", _firstNameBox, 2);
+        AddField(doctorPanel, "По батькові", _middleNameBox, 3);
+        AddField(doctorPanel, "Спеціалізація", _specializationBox, 4);
+        doctorCard.Controls.Add(doctorPanel);
 
         var saveButton = new Button
         {
             Text = "Зберегти",
-            Width = 120,
-            Height = 35
+            Width = 130
         };
-
+        UiTheme.StylePrimaryButton(saveButton);
         saveButton.Click += (_, _) => Save();
 
         var cancelButton = new Button
         {
             Text = "Скасувати",
-            Width = 120,
-            Height = 35,
+            Width = 130,
             DialogResult = DialogResult.Cancel
         };
+        UiTheme.StyleSecondaryButton(cancelButton);
+
+        var buttonsCard = UiTheme.CreateCardPanel();
+        buttonsCard.Dock = DockStyle.Fill;
+        buttonsCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
+        buttonsCard.Padding = new Padding(10, 8, 10, 8);
 
         var buttons = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 55,
-            FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(12)
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft
         };
+        UiTheme.ApplyFlowLayoutDefaults(buttons);
 
         buttons.Controls.Add(cancelButton);
         buttons.Controls.Add(saveButton);
+        buttonsCard.Controls.Add(buttons);
 
-        Controls.Add(panel);
-        Controls.Add(buttons);
-        Controls.Add(title);
+        root.Controls.Add(headerCard, 0, 0);
+        root.Controls.Add(departmentCard, 0, 1);
+        root.Controls.Add(doctorCard, 0, 2);
+        root.Controls.Add(buttonsCard, 0, 3);
+        Controls.Add(root);
 
         AcceptButton = saveButton;
         CancelButton = cancelButton;
     }
 
-    private static void AddField(TableLayoutPanel panel, string labelText, Control control)
+    private static Panel CreateSectionCard(string title)
     {
-        var label = new Label
-        {
-            Text = labelText,
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleLeft,
-            AutoSize = true
-        };
+        var card = UiTheme.CreateCardPanel();
+        card.Dock = DockStyle.Fill;
+        card.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        card.Padding = new Padding(18, 42, 18, 14);
 
-        control.Dock = DockStyle.Fill;
+        var titleLabel = UiTheme.CreateSectionLabel(title);
+        titleLabel.Dock = DockStyle.Top;
+        titleLabel.Height = 30;
+        titleLabel.Padding = new Padding(18, 0, 0, 0);
+        card.Controls.Add(titleLabel);
 
-        panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        panel.Controls.Add(label);
-        panel.Controls.Add(control);
+        return card;
     }
 
-    private static void AddSeparator(TableLayoutPanel panel, string text)
+    private static TableLayoutPanel CreateFieldsPanel()
     {
-        var label = new Label
+        var panel = new TableLayoutPanel
         {
-            Text = text,
             Dock = DockStyle.Fill,
-            Font = new Font(SystemFonts.DefaultFont, FontStyle.Bold),
-            AutoSize = true,
-            Padding = new Padding(0, 12, 0, 4)
+            ColumnCount = 2
         };
+        UiTheme.ApplyTableLayoutDefaults(panel);
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
 
-        panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        panel.Controls.Add(label);
-        panel.SetColumnSpan(label, 2);
+        return panel;
+    }
+
+    private static void AddField(TableLayoutPanel panel, string labelText, Control control, int row)
+    {
+        var label = UiTheme.CreateFieldLabel(labelText);
+
+        control.Dock = DockStyle.Fill;
+        UiTheme.StyleInput(control);
+
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+        panel.Controls.Add(label, 0, row);
+        panel.Controls.Add(control, 1, row);
     }
 
     private void Save()

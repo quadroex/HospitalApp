@@ -6,90 +6,151 @@ public sealed class QueriesForm : Form
 {
     public QueriesForm()
     {
+        UiTheme.ApplyFormTheme(this);
+
         Text = "Запити";
-        Width = 780;
-        Height = 680;
+        Width = 1040;
+        Height = 760;
+        MinimumSize = new Size(880, 640);
         StartPosition = FormStartPosition.CenterParent;
 
-        var title = new Label
+        var root = new TableLayoutPanel
         {
-            Text = "Запити до бази даних",
-            Dock = DockStyle.Top,
-            Height = 55,
-            Font = new Font(Font.FontFamily, 16, FontStyle.Bold),
-            TextAlign = ContentAlignment.MiddleCenter
+            Dock = DockStyle.Fill,
+            Padding = new Padding(UiTheme.FormPadding),
+            ColumnCount = 1,
+            RowCount = 3
         };
+        UiTheme.ApplyTableLayoutDefaults(root);
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+
+        var headerCard = UiTheme.CreateCardPanel();
+        headerCard.Dock = DockStyle.Fill;
+        headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        headerCard.Padding = new Padding(14, 6, 14, 6);
+        headerCard.Controls.Add(UiTheme.CreateHeaderLabel("Запити до бази даних"));
+
+        var listCard = UiTheme.CreateCardPanel();
+        listCard.Dock = DockStyle.Fill;
+        listCard.Margin = new Padding(0);
+        listCard.Padding = new Padding(12);
 
         var panel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.TopDown,
             WrapContents = false,
-            AutoScroll = true,
-            Padding = new Padding(16)
+            AutoScroll = true
         };
+        UiTheme.ApplyFlowLayoutDefaults(panel);
 
-        foreach (var query in QueryConfigs.All)
-            panel.Controls.Add(CreateQueryPanel(query));
+        var queries = QueryConfigs.All;
+        for (var index = 0; index < queries.Count; index++)
+        {
+            if (index == 0)
+                panel.Controls.Add(CreateSectionHeader("Параметризовані запити"));
+            else if (index == 5)
+                panel.Controls.Add(CreateSectionHeader("Запити з множинними порівняннями"));
+
+            panel.Controls.Add(CreateQueryPanel(queries[index]));
+        }
+
+        listCard.Controls.Add(panel);
 
         var closeButton = new Button
         {
             Text = "Повернутись до головного меню",
-            Width = 260,
-            Height = 38
+            Width = 280
         };
-
+        UiTheme.StyleTextButton(closeButton);
         closeButton.Click += (_, _) => Close();
+
+        var bottomCard = UiTheme.CreateCardPanel();
+        bottomCard.Dock = DockStyle.Fill;
+        bottomCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
+        bottomCard.Padding = new Padding(10, 8, 10, 8);
 
         var bottomPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 58,
-            FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(12)
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft
         };
-
+        UiTheme.ApplyFlowLayoutDefaults(bottomPanel);
         bottomPanel.Controls.Add(closeButton);
+        bottomCard.Controls.Add(bottomPanel);
 
-        Controls.Add(panel);
-        Controls.Add(bottomPanel);
-        Controls.Add(title);
+        root.Controls.Add(headerCard, 0, 0);
+        root.Controls.Add(listCard, 0, 1);
+        root.Controls.Add(bottomCard, 0, 2);
+        Controls.Add(root);
+    }
+
+    private static Control CreateSectionHeader(string text)
+    {
+        var label = UiTheme.CreateSectionLabel(text);
+        label.Width = 930;
+        label.Height = 34;
+        label.Margin = new Padding(4, 4, 4, 8);
+        return label;
     }
 
     private Control CreateQueryPanel(QueryConfig query)
     {
-        var container = new Panel
-        {
-            Width = 720,
-            Height = 110,
-            Margin = new Padding(0, 0, 0, 10),
-            BorderStyle = BorderStyle.FixedSingle
-        };
+        var container = UiTheme.CreateCardPanel();
+        container.Width = 930;
+        container.Height = 132;
+        container.Margin = new Padding(4, 0, 4, 12);
+        container.Padding = new Padding(14);
 
-        var button = new Button
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 2
+        };
+        UiTheme.ApplyTableLayoutDefaults(layout);
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 72));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 28));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var title = new Label
         {
             Text = query.Title,
-            Width = 260,
-            Height = 82,
-            Left = 12,
-            Top = 12
+            Dock = DockStyle.Fill,
+            Font = UiTheme.SectionFont,
+            ForeColor = UiTheme.Text,
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true
         };
 
         var description = new Label
         {
             Text = query.Description,
-            Left = 285,
-            Top = 14,
-            Width = 415,
-            Height = 80,
+            Dock = DockStyle.Fill,
+            Font = UiTheme.TextFont,
+            ForeColor = UiTheme.MutedText,
+            TextAlign = ContentAlignment.TopLeft,
             AutoEllipsis = true
         };
 
+        var button = new Button
+        {
+            Text = "Виконати",
+            Width = 160,
+            Anchor = AnchorStyles.Right | AnchorStyles.Top
+        };
+        UiTheme.StylePrimaryButton(button);
         button.Click += (_, _) => RunQuery(query);
 
-        container.Controls.Add(button);
-        container.Controls.Add(description);
+        layout.Controls.Add(title, 0, 0);
+        layout.Controls.Add(description, 0, 1);
+        layout.Controls.Add(button, 1, 0);
+        layout.SetRowSpan(button, 2);
 
+        container.Controls.Add(layout);
         return container;
     }
 

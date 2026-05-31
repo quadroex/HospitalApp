@@ -20,54 +20,78 @@ public sealed class TableForm : Form
 
     public TableForm(TableConfig config)
     {
+        UiTheme.ApplyFormTheme(this);
         _config = config;
 
         Text = _config.Title;
-        Width = 1000;
-        Height = 650;
+        Width = 1120;
+        Height = 720;
+        MinimumSize = new Size(920, 620);
         StartPosition = FormStartPosition.CenterParent;
 
-        var title = new Label
+        UiTheme.StyleDataGridView(_grid);
+
+        var root = new TableLayoutPanel
         {
-            Text = _config.Title,
-            Dock = DockStyle.Top,
-            Height = 45,
-            Font = new Font(Font.FontFamily, 16, FontStyle.Bold),
-            TextAlign = ContentAlignment.MiddleCenter
+            Dock = DockStyle.Fill,
+            Padding = new Padding(UiTheme.FormPadding),
+            ColumnCount = 1,
+            RowCount = 3
         };
+        UiTheme.ApplyTableLayoutDefaults(root);
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+
+        var headerCard = UiTheme.CreateCardPanel();
+        headerCard.Dock = DockStyle.Fill;
+        headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        headerCard.Padding = new Padding(18, 8, 18, 8);
+        headerCard.Controls.Add(UiTheme.CreateHeaderLabel(_config.Title));
+
+        var gridCard = UiTheme.CreateCardPanel();
+        gridCard.Dock = DockStyle.Fill;
+        gridCard.Margin = new Padding(0);
+        gridCard.Padding = new Padding(1);
+        gridCard.Controls.Add(_grid);
 
         var addButton = new Button
         {
             Text = "Додати",
-            Width = 130,
+            Width = 135,
             Enabled = _config.AllowAdd
         };
+        UiTheme.StylePrimaryButton(addButton);
 
         var editButton = new Button
         {
             Text = "Редагувати",
-            Width = 130,
+            Width = 145,
             Enabled = _config.AllowEdit
         };
+        UiTheme.StyleSecondaryButton(editButton);
 
         var deleteButton = new Button
         {
             Text = "Видалити",
-            Width = 130,
+            Width = 135,
             Enabled = _config.AllowDelete
         };
+        UiTheme.StyleDangerButton(deleteButton);
 
         var refreshButton = new Button
         {
             Text = "Оновити",
-            Width = 130
+            Width = 135
         };
+        UiTheme.StyleSecondaryButton(refreshButton);
 
         var backButton = new Button
         {
             Text = "Повернутись до меню",
-            Width = 180
+            Width = 210
         };
+        UiTheme.StyleTextButton(backButton);
 
         addButton.Click += (_, _) => AddRow();
         editButton.Click += (_, _) => EditRow();
@@ -75,13 +99,17 @@ public sealed class TableForm : Form
         refreshButton.Click += (_, _) => LoadData();
         backButton.Click += (_, _) => Close();
 
+        var toolbarCard = UiTheme.CreateCardPanel();
+        toolbarCard.Dock = DockStyle.Fill;
+        toolbarCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
+        toolbarCard.Padding = new Padding(10, 8, 10, 8);
+
         var buttons = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 60,
-            Padding = new Padding(10),
+            Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.LeftToRight
         };
+        UiTheme.ApplyFlowLayoutDefaults(buttons);
 
         buttons.Controls.Add(addButton);
         buttons.Controls.Add(editButton);
@@ -89,9 +117,12 @@ public sealed class TableForm : Form
         buttons.Controls.Add(refreshButton);
         buttons.Controls.Add(backButton);
 
-        Controls.Add(_grid);
-        Controls.Add(buttons);
-        Controls.Add(title);
+        toolbarCard.Controls.Add(buttons);
+
+        root.Controls.Add(headerCard, 0, 0);
+        root.Controls.Add(gridCard, 0, 1);
+        root.Controls.Add(toolbarCard, 0, 2);
+        Controls.Add(root);
 
         LoadData();
     }
