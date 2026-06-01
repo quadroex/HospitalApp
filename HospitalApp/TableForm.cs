@@ -24,9 +24,9 @@ public sealed class TableForm : Form
         _config = config;
 
         Text = _config.Title;
-        Width = 1120;
-        Height = 720;
-        MinimumSize = new Size(920, 620);
+        Width = 1000;
+        Height = 650;
+        MinimumSize = new Size(850, 520);
         StartPosition = FormStartPosition.CenterParent;
 
         UiTheme.StyleDataGridView(_grid);
@@ -39,15 +39,33 @@ public sealed class TableForm : Form
             RowCount = 3
         };
         UiTheme.ApplyTableLayoutDefaults(root);
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var headerCard = UiTheme.CreateCardPanel();
         headerCard.Dock = DockStyle.Fill;
         headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
-        headerCard.Padding = new Padding(18, 8, 18, 8);
-        headerCard.Controls.Add(UiTheme.CreateHeaderLabel(_config.Title));
+        headerCard.Padding = new Padding(18, 6, 18, 6);
+
+        var headerLayout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        UiTheme.ApplyTableLayoutDefaults(headerLayout);
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var title = UiTheme.CreateHeaderLabel(_config.Title);
+        title.TextAlign = ContentAlignment.MiddleLeft;
+        var subtitle = UiTheme.CreateSubHeaderLabel("Перегляд і редагування даних таблиці");
+        subtitle.TextAlign = ContentAlignment.MiddleLeft;
+
+        headerLayout.Controls.Add(title, 0, 0);
+        headerLayout.Controls.Add(subtitle, 0, 1);
+        headerCard.Controls.Add(headerLayout);
 
         var gridCard = UiTheme.CreateCardPanel();
         gridCard.Dock = DockStyle.Fill;
@@ -101,13 +119,15 @@ public sealed class TableForm : Form
 
         var toolbarCard = UiTheme.CreateCardPanel();
         toolbarCard.Dock = DockStyle.Fill;
-        toolbarCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
-        toolbarCard.Padding = new Padding(10, 8, 10, 8);
+        toolbarCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
+        toolbarCard.Padding = new Padding(10, 7, 10, 7);
 
         var buttons = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.LeftToRight
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            AutoScroll = true
         };
         UiTheme.ApplyFlowLayoutDefaults(buttons);
 
@@ -120,8 +140,8 @@ public sealed class TableForm : Form
         toolbarCard.Controls.Add(buttons);
 
         root.Controls.Add(headerCard, 0, 0);
-        root.Controls.Add(gridCard, 0, 1);
-        root.Controls.Add(toolbarCard, 0, 2);
+        root.Controls.Add(toolbarCard, 0, 1);
+        root.Controls.Add(gridCard, 0, 2);
         Controls.Add(root);
 
         LoadData();

@@ -24,7 +24,7 @@ public sealed class DepartmentWithHeadForm : Form
 
         Text = "Додати відділення із завідувачем";
         Width = 720;
-        Height = 640;
+        Height = 620;
         MinimumSize = new Size(640, 560);
         StartPosition = FormStartPosition.CenterParent;
 
@@ -36,16 +36,34 @@ public sealed class DepartmentWithHeadForm : Form
             RowCount = 4
         };
         UiTheme.ApplyTableLayoutDefaults(root);
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 128));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 122));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 250));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
 
-        var headerCard = UiTheme.CreateCardPanel();
+        var headerCard = UiTheme.CreateMainCard();
         headerCard.Dock = DockStyle.Fill;
         headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
-        headerCard.Padding = new Padding(14, 6, 14, 6);
-        headerCard.Controls.Add(UiTheme.CreateHeaderLabel("Нове відділення та його завідувач"));
+        headerCard.Padding = new Padding(18, 8, 18, 8);
+
+        var headerLayout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        UiTheme.ApplyTableLayoutDefaults(headerLayout);
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var title = UiTheme.CreateHeaderLabel("Нове відділення із завідувачем");
+        title.TextAlign = ContentAlignment.MiddleLeft;
+        var subtitle = UiTheme.CreateSubHeaderLabel("Створення взаємозалежних записів в одній транзакції");
+        subtitle.TextAlign = ContentAlignment.MiddleLeft;
+
+        headerLayout.Controls.Add(title, 0, 0);
+        headerLayout.Controls.Add(subtitle, 0, 1);
+        headerCard.Controls.Add(headerLayout);
 
         var departmentCard = CreateSectionCard("Відділення");
         var departmentPanel = CreateFieldsPanel();
@@ -78,26 +96,21 @@ public sealed class DepartmentWithHeadForm : Form
         };
         UiTheme.StyleSecondaryButton(cancelButton);
 
-        var buttonsCard = UiTheme.CreateCardPanel();
-        buttonsCard.Dock = DockStyle.Fill;
-        buttonsCard.Margin = new Padding(0, UiTheme.Spacing, 0, 0);
-        buttonsCard.Padding = new Padding(10, 8, 10, 8);
-
         var buttons = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.RightToLeft
+            FlowDirection = FlowDirection.RightToLeft,
+            WrapContents = false,
+            Padding = new Padding(0, 8, 0, 0)
         };
         UiTheme.ApplyFlowLayoutDefaults(buttons);
-
         buttons.Controls.Add(cancelButton);
         buttons.Controls.Add(saveButton);
-        buttonsCard.Controls.Add(buttons);
 
         root.Controls.Add(headerCard, 0, 0);
         root.Controls.Add(departmentCard, 0, 1);
         root.Controls.Add(doctorCard, 0, 2);
-        root.Controls.Add(buttonsCard, 0, 3);
+        root.Controls.Add(buttons, 0, 3);
         Controls.Add(root);
 
         AcceptButton = saveButton;
@@ -106,7 +119,7 @@ public sealed class DepartmentWithHeadForm : Form
 
     private static Panel CreateSectionCard(string title)
     {
-        var card = UiTheme.CreateCardPanel();
+        var card = UiTheme.CreateMainCard();
         card.Dock = DockStyle.Fill;
         card.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
         card.Padding = new Padding(18, 42, 18, 14);
@@ -141,7 +154,7 @@ public sealed class DepartmentWithHeadForm : Form
         control.Dock = DockStyle.Fill;
         UiTheme.StyleInput(control);
 
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
         panel.Controls.Add(label, 0, row);
         panel.Controls.Add(control, 1, row);
     }

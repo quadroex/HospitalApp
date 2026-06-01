@@ -8,7 +8,7 @@ public sealed class QueriesForm : Form
     {
         UiTheme.ApplyFormTheme(this);
 
-        Text = "Запити";
+        Text = "SQL-запити";
         Width = 1040;
         Height = 760;
         MinimumSize = new Size(880, 640);
@@ -30,7 +30,25 @@ public sealed class QueriesForm : Form
         headerCard.Dock = DockStyle.Fill;
         headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
         headerCard.Padding = new Padding(14, 6, 14, 6);
-        headerCard.Controls.Add(UiTheme.CreateHeaderLabel("Запити до бази даних"));
+
+        var headerLayout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        UiTheme.ApplyTableLayoutDefaults(headerLayout);
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var title = UiTheme.CreateHeaderLabel("SQL-запити");
+        title.TextAlign = ContentAlignment.MiddleLeft;
+        var subtitle = UiTheme.CreateSubHeaderLabel("Параметризовані запити та запити з множинними порівняннями");
+        subtitle.TextAlign = ContentAlignment.MiddleLeft;
+
+        headerLayout.Controls.Add(title, 0, 0);
+        headerLayout.Controls.Add(subtitle, 0, 1);
+        headerCard.Controls.Add(headerLayout);
 
         var listCard = UiTheme.CreateCardPanel();
         listCard.Dock = DockStyle.Fill;
