@@ -59,7 +59,7 @@ public sealed class QueryParameterForm : Form
             var label = UiTheme.CreateFieldLabel(parameter.Label);
 
             var control = CreateControl(parameter);
-            control.Dock = DockStyle.Fill;
+            control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             UiTheme.StyleInput(control);
             _controls[parameter.Name] = control;
 

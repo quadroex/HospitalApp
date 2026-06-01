@@ -36,6 +36,8 @@ public sealed class TableConfig
     public bool AllowDelete { get; set; } = true;
 
     public List<ColumnConfig> Columns { get; set; } = new();
+    public List<string> HiddenGridColumns { get; set; } = new();
+    public Dictionary<string, string> ColumnHeaders { get; set; } = new();
 
     public IEnumerable<ColumnConfig> PrimaryKeys =>
         Columns.Where(column => column.IsPrimaryKey);

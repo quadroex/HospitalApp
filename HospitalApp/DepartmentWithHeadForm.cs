@@ -23,9 +23,9 @@ public sealed class DepartmentWithHeadForm : Form
         UiTheme.ApplyFormTheme(this);
 
         Text = "Додати відділення із завідувачем";
-        Width = 720;
-        Height = 620;
-        MinimumSize = new Size(640, 560);
+        Width = 760;
+        Height = 680;
+        MinimumSize = new Size(720, 620);
         StartPosition = FormStartPosition.CenterParent;
 
         var root = new TableLayoutPanel
@@ -36,10 +36,10 @@ public sealed class DepartmentWithHeadForm : Form
             RowCount = 4
         };
         UiTheme.ApplyTableLayoutDefaults(root);
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 122));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 250));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 84));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 160));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 66));
 
         var headerCard = UiTheme.CreateMainCard();
         headerCard.Dock = DockStyle.Fill;
@@ -65,20 +65,18 @@ public sealed class DepartmentWithHeadForm : Form
         headerLayout.Controls.Add(subtitle, 0, 1);
         headerCard.Controls.Add(headerLayout);
 
-        var departmentCard = CreateSectionCard("Відділення");
-        var departmentPanel = CreateFieldsPanel();
+        var departmentPanel = CreateFieldsPanel(2);
         AddField(departmentPanel, "Назва відділення", _departmentNameBox, 0);
         AddField(departmentPanel, "Поверх", _floorBox, 1);
-        departmentCard.Controls.Add(departmentPanel);
+        var departmentCard = CreateSectionCard("Відділення", departmentPanel);
 
-        var doctorCard = CreateSectionCard("Завідувач-лікар");
-        var doctorPanel = CreateFieldsPanel();
+        var doctorPanel = CreateFieldsPanel(5);
         AddField(doctorPanel, "Паспорт", _passportBox, 0);
         AddField(doctorPanel, "Прізвище", _lastNameBox, 1);
         AddField(doctorPanel, "Ім'я", _firstNameBox, 2);
         AddField(doctorPanel, "По батькові", _middleNameBox, 3);
         AddField(doctorPanel, "Спеціалізація", _specializationBox, 4);
-        doctorCard.Controls.Add(doctorPanel);
+        var doctorCard = CreateSectionCard("Завідувач-лікар", doctorPanel);
 
         var saveButton = new Button
         {
@@ -101,7 +99,7 @@ public sealed class DepartmentWithHeadForm : Form
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
             WrapContents = false,
-            Padding = new Padding(0, 8, 0, 0)
+            Padding = new Padding(0, 14, 0, 0)
         };
         UiTheme.ApplyFlowLayoutDefaults(buttons);
         buttons.Controls.Add(cancelButton);
@@ -117,32 +115,50 @@ public sealed class DepartmentWithHeadForm : Form
         CancelButton = cancelButton;
     }
 
-    private static Panel CreateSectionCard(string title)
+    private static Panel CreateSectionCard(string title, Control content)
     {
         var card = UiTheme.CreateMainCard();
         card.Dock = DockStyle.Fill;
         card.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
-        card.Padding = new Padding(18, 42, 18, 14);
+        card.Padding = new Padding(18);
+
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        UiTheme.ApplyTableLayoutDefaults(layout);
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var titleLabel = UiTheme.CreateSectionLabel(title);
-        titleLabel.Dock = DockStyle.Top;
-        titleLabel.Height = 30;
-        titleLabel.Padding = new Padding(18, 0, 0, 0);
-        card.Controls.Add(titleLabel);
+        titleLabel.Padding = new Padding(0, 0, 0, 0);
+
+        content.Dock = DockStyle.Fill;
+        layout.Controls.Add(titleLabel, 0, 0);
+        layout.Controls.Add(content, 0, 1);
+        card.Controls.Add(layout);
 
         return card;
     }
 
-    private static TableLayoutPanel CreateFieldsPanel()
+    private static TableLayoutPanel CreateFieldsPanel(int fieldCount)
     {
         var panel = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2
+            ColumnCount = 2,
+            RowCount = fieldCount + 1
         };
         UiTheme.ApplyTableLayoutDefaults(panel);
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
+
+        for (var index = 0; index < fieldCount; index++)
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         return panel;
     }
@@ -151,10 +167,11 @@ public sealed class DepartmentWithHeadForm : Form
     {
         var label = UiTheme.CreateFieldLabel(labelText);
 
-        control.Dock = DockStyle.Fill;
+        control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         UiTheme.StyleInput(control);
+        control.Height = 28;
+        control.MinimumSize = new Size(0, 28);
 
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
         panel.Controls.Add(label, 0, row);
         panel.Controls.Add(control, 1, row);
     }

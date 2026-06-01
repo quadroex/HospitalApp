@@ -77,15 +77,6 @@ public sealed class MainMenuForm : Form
             "doctor_consultations"
         });
 
-        navigation.Controls.Add(UiTheme.CreateSidebarGroupLabel("АНАЛІТИКА"));
-        var queriesButton = CreateSidebarNavButton("SQL-запити", primary: true);
-        queriesButton.Click += (_, _) =>
-        {
-            using var form = new QueriesForm();
-            form.ShowDialog(this);
-        };
-        navigation.Controls.Add(queriesButton);
-
         var exitButton = CreateSidebarNavButton("Вихід", primary: false);
         UiTheme.StyleDangerButton(exitButton);
         exitButton.Width = 240;
@@ -122,7 +113,7 @@ public sealed class MainMenuForm : Form
             Margin = new Padding(0, 10, 0, 0)
         };
 
-        var subtitle = UiTheme.CreateSidebarSubtitleLabel("PostgreSQL БД");
+        var subtitle = UiTheme.CreateSidebarSubtitleLabel("Powered by PostgreSQL.");
         var title = UiTheme.CreateSidebarTitleLabel("HospitalApp");
 
         header.Controls.Add(accent);
@@ -182,7 +173,7 @@ public sealed class MainMenuForm : Form
         return TableConfigs.All.First(config => config.TableName == tableName);
     }
 
-    private static Control CreateContentArea()
+    private Control CreateContentArea()
     {
         var content = new Panel
         {
@@ -191,83 +182,76 @@ public sealed class MainMenuForm : Form
             Padding = new Padding(28)
         };
 
-        var note = CreateInstructionCard();
-        note.Dock = DockStyle.Top;
-        note.Height = 64;
-        note.Margin = new Padding(0, 18, 0, 0);
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        UiTheme.ApplyTableLayoutDefaults(layout);
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 126));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        var featureGrid = CreateFeatureGrid();
-        featureGrid.Dock = DockStyle.Top;
-        featureGrid.Height = 300;
-        featureGrid.Margin = new Padding(0, 18, 0, 0);
-
-        var hero = UiTheme.CreateHeroCard(
-            "База даних госпіталя",
-            "Навчальний застосунок для роботи з PostgreSQL БД",
-            "Форми введення даних, вибір зовнішніх ключів через списки, параметризовані SQL-запити та запити з множинними порівняннями.");
-        hero.Dock = DockStyle.Top;
-        hero.Height = 160;
-        hero.Margin = new Padding(0);
-
-        content.Controls.Add(note);
-        content.Controls.Add(featureGrid);
-        content.Controls.Add(hero);
+        layout.Controls.Add(CreateWorkspaceHeader(), 0, 0);
+        layout.Controls.Add(CreateQueryWorkspace(), 0, 1);
+        content.Controls.Add(layout);
 
         return content;
     }
 
-    private static Control CreateFeatureGrid()
+    private static Control CreateWorkspaceHeader()
     {
-        var grid = new TableLayoutPanel
+        var card = UiTheme.CreateMainCard();
+        card.Dock = DockStyle.Fill;
+        card.Margin = new Padding(0, 0, 0, 12);
+        card.Padding = new Padding(22, 12, 22, 12);
+
+        var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 2
+            ColumnCount = 1,
+            RowCount = 3
         };
-        UiTheme.ApplyTableLayoutDefaults(grid);
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 140));
-        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 140));
+        UiTheme.ApplyTableLayoutDefaults(layout);
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        AddFeatureCard(grid, 0, 0, "Форми введення", "Додавання, редагування та видалення записів через користувацькі форми.");
-        AddFeatureCard(grid, 1, 0, "Зовнішні ключі", "Пов'язані значення вибираються зі списків ComboBox.");
-        AddFeatureCard(grid, 0, 1, "Складні зв'язки", "Тернарний зв'язок, рекурсивний зв'язок, IS-A підтипи та слабка сутність.");
-        AddFeatureCard(grid, 1, 1, "SQL-запити", "5 параметризованих запитів і 2 запити з множинними порівняннями.");
+        var title = UiTheme.CreateMainHeaderLabel("База даних госпіталя");
+        var subtitle = UiTheme.CreateSubHeaderLabel("  Супер пупер дупер крутий госпіталь.");
+        subtitle.TextAlign = ContentAlignment.MiddleLeft;
+        var line = UiTheme.CreateSmallMutedLabel("");
 
-        return grid;
+        layout.Controls.Add(title, 0, 0);
+        layout.Controls.Add(subtitle, 0, 1);
+        layout.Controls.Add(line, 0, 2);
+
+        card.Controls.Add(layout);
+        return card;
     }
 
-    private static void AddFeatureCard(TableLayoutPanel grid, int column, int row, string title, string body)
-    {
-        var card = UiTheme.CreateFeatureCard(title, body);
-        card.Dock = DockStyle.Fill;
-        card.Margin = new Padding(
-            column == 0 ? 0 : 8,
-            row == 0 ? 0 : 8,
-            column == 0 ? 8 : 0,
-            row == 0 ? 8 : 0);
-
-        grid.Controls.Add(card, column, row);
-    }
-
-    private static Control CreateInstructionCard()
+    private Control CreateQueryWorkspace()
     {
         var card = UiTheme.CreateMainCard();
         card.Dock = DockStyle.Fill;
         card.Margin = new Padding(0);
-        card.Padding = new Padding(20, 12, 20, 12);
+        card.Padding = new Padding(12);
 
-        var label = new Label
+        var scrollPanel = new Panel
         {
-            Text = "Оберіть розділ у лівому меню, щоб відкрити таблицю або запити.",
             Dock = DockStyle.Fill,
-            Font = UiTheme.TextFont,
-            ForeColor = UiTheme.TextMuted,
-            TextAlign = ContentAlignment.MiddleLeft
+            AutoScroll = true,
+            BackColor = Color.Transparent
         };
 
-        card.Controls.Add(label);
+        var cards = QueryConfigs.All
+            .Select(query => QueryUi.CreateQueryCard(query, queryConfig => QueryUi.RunQuery(this, queryConfig)))
+            .ToList();
+
+        for (var index = cards.Count - 1; index >= 0; index--)
+            scrollPanel.Controls.Add(cards[index]);
+
+        card.Controls.Add(scrollPanel);
         return card;
     }
 }

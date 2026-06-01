@@ -1,4 +1,4 @@
-﻿namespace HospitalApp;
+namespace HospitalApp;
 
 public static class TableConfigs
 {
@@ -125,11 +125,22 @@ public static class TableConfigs
             Title = "Відділення",
             TableName = "departments",
             SelectSql = """
-                SELECT name, floor, head_passport
-                FROM departments
-                ORDER BY name
+                SELECT
+                    dep.name,
+                    dep.floor,
+                    dep.head_passport,
+                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS head_full_name
+                FROM departments dep
+                JOIN doctors d ON d.passport = dep.head_passport
+                ORDER BY dep.name
                 """,
-
+            HiddenGridColumns = new List<string> { "head_passport" },
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["name"] = "Назва",
+                ["floor"] = "Поверх",
+                ["head_full_name"] = "Завідувач"
+            },
             Columns = new List<ColumnConfig>
             {
                 Text("name", "Назва", pk: true),
@@ -150,6 +161,15 @@ public static class TableConfigs
                 FROM doctors
                 ORDER BY passport
                 """,
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["passport"] = "Паспорт",
+                ["last_name"] = "Прізвище",
+                ["first_name"] = "Ім'я",
+                ["middle_name"] = "По батькові",
+                ["specialization"] = "Спеціалізація",
+                ["department_name"] = "Відділення"
+            },
             Columns = new List<ColumnConfig>
             {
                 Text("passport", "Паспорт", pk: true),
@@ -169,10 +189,20 @@ public static class TableConfigs
             Title = "Терапевти",
             TableName = "therapists",
             SelectSql = """
-                SELECT doctor_passport, districts_count
-                FROM therapists
-                ORDER BY doctor_passport
+                SELECT
+                    t.doctor_passport,
+                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS doctor_full_name,
+                    t.districts_count
+                FROM therapists t
+                JOIN doctors d ON d.passport = t.doctor_passport
+                ORDER BY d.last_name, d.first_name
                 """,
+            HiddenGridColumns = new List<string> { "doctor_passport" },
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["doctor_full_name"] = "Лікар",
+                ["districts_count"] = "Кількість дільниць"
+            },
             Columns = new List<ColumnConfig>
             {
                 Fk("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name", pk: true),
@@ -188,10 +218,20 @@ public static class TableConfigs
             Title = "Хірурги",
             TableName = "surgeons",
             SelectSql = """
-                SELECT doctor_passport, category
-                FROM surgeons
-                ORDER BY doctor_passport
+                SELECT
+                    s.doctor_passport,
+                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS doctor_full_name,
+                    s.category
+                FROM surgeons s
+                JOIN doctors d ON d.passport = s.doctor_passport
+                ORDER BY d.last_name, d.first_name
                 """,
+            HiddenGridColumns = new List<string> { "doctor_passport" },
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["doctor_full_name"] = "Лікар",
+                ["category"] = "Категорія"
+            },
             Columns = new List<ColumnConfig>
             {
                 Fk("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name", pk: true),
@@ -211,6 +251,14 @@ public static class TableConfigs
                 FROM patients
                 ORDER BY card_number
                 """,
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["card_number"] = "Номер картки",
+                ["last_name"] = "Прізвище",
+                ["first_name"] = "Ім'я",
+                ["middle_name"] = "По батькові",
+                ["birth_date"] = "Дата народження"
+            },
             Columns = new List<ColumnConfig>
             {
                 Text("card_number", "Номер картки", pk: true),
@@ -229,10 +277,24 @@ public static class TableConfigs
             Title = "Записи візитів",
             TableName = "visit_records",
             SelectSql = """
-                SELECT patient_card_number, visit_date, visit_time, complaints
-                FROM visit_records
-                ORDER BY patient_card_number, visit_date, visit_time
+                SELECT
+                    vr.patient_card_number,
+                    p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS patient_full_name,
+                    vr.visit_date,
+                    vr.visit_time,
+                    vr.complaints
+                FROM visit_records vr
+                JOIN patients p ON p.card_number = vr.patient_card_number
+                ORDER BY vr.patient_card_number, vr.visit_date, vr.visit_time
                 """,
+            HiddenGridColumns = new List<string> { "patient_card_number" },
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["patient_full_name"] = "Пацієнт",
+                ["visit_date"] = "Дата",
+                ["visit_time"] = "Час",
+                ["complaints"] = "Скарги"
+            },
             Columns = new List<ColumnConfig>
             {
                 Fk("patient_card_number", "Пацієнт", PatientsLookupSql, "card_number", "full_name", pk: true),
@@ -254,6 +316,11 @@ public static class TableConfigs
                 FROM rooms
                 ORDER BY number
                 """,
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["number"] = "Номер",
+                ["equipment_type"] = "Обладнання"
+            },
             Columns = new List<ColumnConfig>
             {
                 Text("number", "Номер кабінету", pk: true),
@@ -269,10 +336,31 @@ public static class TableConfigs
             Title = "Прийоми / процедури",
             TableName = "appointments",
             SelectSql = """
-                SELECT doctor_passport, patient_card_number, room_number
-                FROM appointments
-                ORDER BY doctor_passport, patient_card_number, room_number
+                SELECT
+                    a.doctor_passport,
+                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS doctor_full_name,
+                    a.patient_card_number,
+                    p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS patient_full_name,
+                    a.room_number,
+                    r.number || ' — ' || r.equipment_type AS room_label
+                FROM appointments a
+                JOIN doctors d ON d.passport = a.doctor_passport
+                JOIN patients p ON p.card_number = a.patient_card_number
+                JOIN rooms r ON r.number = a.room_number
+                ORDER BY a.doctor_passport, a.patient_card_number, a.room_number
                 """,
+            HiddenGridColumns = new List<string>
+            {
+                "doctor_passport",
+                "patient_card_number",
+                "room_number"
+            },
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["doctor_full_name"] = "Лікар",
+                ["patient_full_name"] = "Пацієнт",
+                ["room_label"] = "Кабінет"
+            },
             Columns = new List<ColumnConfig>
             {
                 Fk("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name", pk: true),
@@ -289,10 +377,26 @@ public static class TableConfigs
             Title = "Консультації лікарів",
             TableName = "doctor_consultations",
             SelectSql = """
-                SELECT doctor_passport, consultant_passport
-                FROM doctor_consultations
-                ORDER BY doctor_passport, consultant_passport
+                SELECT
+                    dc.doctor_passport,
+                    d1.last_name || ' ' || d1.first_name || COALESCE(' ' || d1.middle_name, '') AS doctor_full_name,
+                    dc.consultant_passport,
+                    d2.last_name || ' ' || d2.first_name || COALESCE(' ' || d2.middle_name, '') AS consultant_full_name
+                FROM doctor_consultations dc
+                JOIN doctors d1 ON d1.passport = dc.doctor_passport
+                JOIN doctors d2 ON d2.passport = dc.consultant_passport
+                ORDER BY d1.last_name, d1.first_name, d2.last_name, d2.first_name
                 """,
+            HiddenGridColumns = new List<string>
+            {
+                "doctor_passport",
+                "consultant_passport"
+            },
+            ColumnHeaders = new Dictionary<string, string>
+            {
+                ["doctor_full_name"] = "Лікар",
+                ["consultant_full_name"] = "Лікар-консультант"
+            },
             Columns = new List<ColumnConfig>
             {
                 Fk("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name", pk: true),

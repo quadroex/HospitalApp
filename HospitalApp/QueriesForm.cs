@@ -1,5 +1,3 @@
-using Npgsql;
-
 namespace HospitalApp;
 
 public sealed class QueriesForm : Form
@@ -30,55 +28,21 @@ public sealed class QueriesForm : Form
         headerCard.Dock = DockStyle.Fill;
         headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
         headerCard.Padding = new Padding(14, 6, 14, 6);
-
-        var headerLayout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 2
-        };
-        UiTheme.ApplyTableLayoutDefaults(headerLayout);
-        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
-        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-        var title = UiTheme.CreateHeaderLabel("SQL-запити");
-        title.TextAlign = ContentAlignment.MiddleLeft;
-        var subtitle = UiTheme.CreateSubHeaderLabel("Параметризовані запити та запити з множинними порівняннями");
-        subtitle.TextAlign = ContentAlignment.MiddleLeft;
-
-        headerLayout.Controls.Add(title, 0, 0);
-        headerLayout.Controls.Add(subtitle, 0, 1);
-        headerCard.Controls.Add(headerLayout);
+        headerCard.Controls.Add(CreateHeader());
 
         var listCard = UiTheme.CreateCardPanel();
         listCard.Dock = DockStyle.Fill;
         listCard.Margin = new Padding(0);
         listCard.Padding = new Padding(12);
 
-        var panel = new FlowLayoutPanel
+        var scrollPanel = new Panel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.TopDown,
-            WrapContents = false,
-            AutoScroll = true
+            AutoScroll = true,
+            BackColor = Color.Transparent
         };
-        UiTheme.ApplyFlowLayoutDefaults(panel);
-
-        var queries = QueryConfigs.All;
-        for (var index = 0; index < queries.Count; index++)
-        {
-            if (index == 0)
-                panel.Controls.Add(CreateSectionHeader("Параметризовані запити"));
-            else if (index == 5)
-                panel.Controls.Add(CreateSectionHeader("Запити з множинними порівняннями"));
-
-            panel.Controls.Add(CreateQueryPanel(queries[index]));
-        }
-
-        panel.SizeChanged += (_, _) => ResizeQueryCards(panel);
-        ResizeQueryCards(panel);
-
-        listCard.Controls.Add(panel);
+        AddQueryCards(scrollPanel);
+        listCard.Controls.Add(scrollPanel);
 
         var closeButton = new Button
         {
@@ -96,7 +60,8 @@ public sealed class QueriesForm : Form
         var bottomPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.RightToLeft
+            FlowDirection = FlowDirection.RightToLeft,
+            WrapContents = false
         };
         UiTheme.ApplyFlowLayoutDefaults(bottomPanel);
         bottomPanel.Controls.Add(closeButton);
@@ -108,113 +73,57 @@ public sealed class QueriesForm : Form
         Controls.Add(root);
     }
 
-    private static Control CreateSectionHeader(string text)
+    private static Control CreateHeader()
     {
-        var label = UiTheme.CreateSectionLabel(text);
-        label.Width = 780;
-        label.Height = 34;
-        label.Margin = new Padding(4, 4, 4, 8);
-        label.Tag = "resizable";
-        return label;
-    }
-
-    private Control CreateQueryPanel(QueryConfig query)
-    {
-        var container = UiTheme.CreateCardPanel();
-        container.Width = 780;
-        container.Height = 132;
-        container.Margin = new Padding(4, 0, 4, 12);
-        container.Padding = new Padding(14);
-        container.Tag = "resizable";
-
-        var layout = new TableLayoutPanel
+        var headerLayout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2,
+            ColumnCount = 1,
             RowCount = 2
         };
-        UiTheme.ApplyTableLayoutDefaults(layout);
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 72));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 28));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        UiTheme.ApplyTableLayoutDefaults(headerLayout);
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        var title = new Label
+        var title = UiTheme.CreateHeaderLabel("SQL-запити");
+        title.TextAlign = ContentAlignment.MiddleLeft;
+        var subtitle = UiTheme.CreateSubHeaderLabel("Параметризовані запити та запити з множинними порівняннями");
+        subtitle.TextAlign = ContentAlignment.MiddleLeft;
+
+        headerLayout.Controls.Add(title, 0, 0);
+        headerLayout.Controls.Add(subtitle, 0, 1);
+        return headerLayout;
+    }
+
+    private void AddQueryCards(Panel scrollPanel)
+    {
+        var controls = new List<Control>();
+        var queries = QueryConfigs.All;
+
+        controls.Add(CreateSectionHeader("Параметризовані запити"));
+        for (var index = 0; index < 5 && index < queries.Count; index++)
+            controls.Add(QueryUi.CreateQueryCard(queries[index], query => QueryUi.RunQuery(this, query)));
+
+        controls.Add(CreateSectionHeader("Запити з множинними порівняннями"));
+        for (var index = 5; index < queries.Count; index++)
+            controls.Add(QueryUi.CreateQueryCard(queries[index], query => QueryUi.RunQuery(this, query)));
+
+        for (var index = controls.Count - 1; index >= 0; index--)
+            scrollPanel.Controls.Add(controls[index]);
+    }
+
+    private static Control CreateSectionHeader(string text)
+    {
+        return new Label
         {
-            Text = query.Title,
-            Dock = DockStyle.Fill,
+            Text = text,
+            Dock = DockStyle.Top,
+            Height = 36,
             Font = UiTheme.SectionFont,
-            ForeColor = UiTheme.Text,
+            ForeColor = UiTheme.TextDark,
             TextAlign = ContentAlignment.MiddleLeft,
-            AutoEllipsis = true
+            Padding = new Padding(2, 0, 0, 0)
         };
-
-        var description = new Label
-        {
-            Text = query.Description,
-            Dock = DockStyle.Fill,
-            Font = UiTheme.TextFont,
-            ForeColor = UiTheme.MutedText,
-            TextAlign = ContentAlignment.TopLeft,
-            AutoEllipsis = true
-        };
-
-        var button = new Button
-        {
-            Text = "Виконати",
-            Width = 160,
-            Anchor = AnchorStyles.Right | AnchorStyles.Top
-        };
-        UiTheme.StylePrimaryButton(button);
-        button.Click += (_, _) => RunQuery(query);
-
-        layout.Controls.Add(title, 0, 0);
-        layout.Controls.Add(description, 0, 1);
-        layout.Controls.Add(button, 1, 0);
-        layout.SetRowSpan(button, 2);
-
-        container.Controls.Add(layout);
-        return container;
     }
 
-    private static void ResizeQueryCards(FlowLayoutPanel panel)
-    {
-        var width = Math.Max(720, panel.ClientSize.Width - 28);
-        foreach (Control control in panel.Controls)
-        {
-            if (Equals(control.Tag, "resizable"))
-                control.Width = width;
-        }
-    }
-
-    private void RunQuery(QueryConfig query)
-    {
-        try
-        {
-            var values = new Dictionary<string, object?>();
-
-            if (query.Parameters.Count > 0)
-            {
-                using var parameterForm = new QueryParameterForm(query);
-
-                if (parameterForm.ShowDialog(this) != DialogResult.OK)
-                    return;
-
-                values = parameterForm.Values;
-            }
-
-            var parameters = query.Parameters
-                .Select(parameter => new NpgsqlParameter(parameter.Name, values[parameter.Name] ?? DBNull.Value))
-                .ToArray();
-
-            var data = Db.GetTable(query.Sql, parameters);
-
-            using var resultForm = new QueryResultForm(query, data);
-            resultForm.ShowDialog(this);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(Db.GetFriendlyError(ex), "Помилка виконання запиту");
-        }
-    }
 }

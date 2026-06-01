@@ -152,10 +152,28 @@ public sealed class TableForm : Form
         try
         {
             _grid.DataSource = Db.GetTable(_config.SelectSql);
+            ApplyGridDisplayConfig();
         }
         catch (Exception ex)
         {
             MessageBox.Show(Db.GetFriendlyError(ex), "Помилка завантаження даних");
+        }
+    }
+
+    private void ApplyGridDisplayConfig()
+    {
+        foreach (var hiddenColumn in _config.HiddenGridColumns)
+        {
+            var column = _grid.Columns[hiddenColumn];
+            if (column != null)
+                column.Visible = false;
+        }
+
+        foreach (var header in _config.ColumnHeaders)
+        {
+            var column = _grid.Columns[header.Key];
+            if (column != null)
+                column.HeaderText = header.Value;
         }
     }
 

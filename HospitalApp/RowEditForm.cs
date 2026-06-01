@@ -45,11 +45,20 @@ public sealed class RowEditForm : Form
         fieldsCard.Margin = new Padding(0);
         fieldsCard.Padding = new Padding(18);
 
-        var panel = new TableLayoutPanel
+        var fieldsHost = new Panel
         {
             Dock = DockStyle.Fill,
+            AutoScroll = true,
+            BackColor = Color.Transparent
+        };
+
+        var panel = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
             ColumnCount = 2,
-            AutoScroll = true
+            RowCount = 0
         };
         UiTheme.ApplyTableLayoutDefaults(panel);
 
@@ -62,7 +71,7 @@ public sealed class RowEditForm : Form
             var label = UiTheme.CreateFieldLabel(column.Label);
 
             var control = CreateControl(column, existingRow);
-            control.Dock = DockStyle.Fill;
+            control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             UiTheme.StyleInput(control);
 
             if (_editMode && column.IsPrimaryKey)
@@ -75,6 +84,7 @@ public sealed class RowEditForm : Form
             panel.Controls.Add(control, 1, row);
             row++;
         }
+        panel.RowCount = row;
 
         var saveButton = new Button
         {
@@ -120,7 +130,8 @@ public sealed class RowEditForm : Form
         buttons.Controls.Add(cancelButton);
         buttons.Controls.Add(saveButton);
 
-        fieldsCard.Controls.Add(panel);
+        fieldsHost.Controls.Add(panel);
+        fieldsCard.Controls.Add(fieldsHost);
         buttonsCard.Controls.Add(buttons);
 
         root.Controls.Add(headerCard, 0, 0);

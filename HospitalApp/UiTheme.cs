@@ -37,7 +37,7 @@ public static class UiTheme
     public static readonly Font GroupFont = new("Segoe UI", 9.5F, FontStyle.Bold);
 
     public const int ButtonHeight = 42;
-    public const int ControlHeight = 42;
+    public const int ControlHeight = 24;
     public const int Spacing = 0;
     public const int FormPadding = 0;
 
@@ -351,11 +351,14 @@ public static class UiTheme
 
     public static void StyleTextBox(TextBox textBox)
     {
+        textBox.AutoSize = false;
         textBox.BackColor = InputBack;
         textBox.ForeColor = TextDark;
         textBox.BorderStyle = BorderStyle.FixedSingle;
         textBox.Font = TextFont;
+        textBox.Height = ControlHeight;
         textBox.MinimumSize = new Size(0, ControlHeight);
+        textBox.Padding = new Padding(4, 0, 0, 0);
         textBox.Margin = new Padding(0, 4, 0, 4);
     }
 
@@ -363,8 +366,9 @@ public static class UiTheme
     {
         comboBox.BackColor = InputBack;
         comboBox.ForeColor = TextDark;
-        comboBox.FlatStyle = FlatStyle.Flat;
+        comboBox.FlatStyle = FlatStyle.Standard;
         comboBox.Font = TextFont;
+        comboBox.Height = ControlHeight;
         comboBox.MinimumSize = new Size(0, ControlHeight);
         comboBox.Margin = new Padding(0, 4, 0, 4);
     }
@@ -378,6 +382,7 @@ public static class UiTheme
         picker.CalendarMonthBackground = InputBack;
         picker.CalendarTitleBackColor = CardSecondary;
         picker.CalendarTitleForeColor = TextDark;
+        picker.Height = ControlHeight;
         picker.MinimumSize = new Size(0, ControlHeight);
         picker.Margin = new Padding(0, 4, 0, 4);
     }
@@ -388,6 +393,7 @@ public static class UiTheme
         numeric.ForeColor = TextDark;
         numeric.BorderStyle = BorderStyle.FixedSingle;
         numeric.Font = TextFont;
+        numeric.Height = ControlHeight;
         numeric.MinimumSize = new Size(0, ControlHeight);
         numeric.Margin = new Padding(0, 4, 0, 4);
     }

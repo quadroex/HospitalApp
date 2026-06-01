@@ -82,7 +82,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Лікарі заданого відділення",
+            Title = "1. Лікарі заданого відділення",
             Description = "Вивести лікарів, які працюють у вибраному відділенні.",
             Parameters = new List<QueryParameter>
             {
@@ -107,7 +107,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Пацієнти з візитами після заданої дати",
+            Title = "2. Пацієнти з візитами після заданої дати",
             Description = "Вивести пацієнтів та їхні записи візитів, дата яких не раніше заданої користувачем.",
             Parameters = new List<QueryParameter>
             {
@@ -133,7 +133,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Прийоми у кабінетах із заданим обладнанням",
+            Title = "3. Прийоми у кабінетах із заданим обладнанням",
             Description = "Вивести прийоми або процедури, що проводяться в кабінетах, обладнання яких містить введений текст.",
             Parameters = new List<QueryParameter>
             {
@@ -159,7 +159,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Пацієнти лікарів заданої спеціалізації",
+            Title = "4. Пацієнти лікарів заданої спеціалізації",
             Description = "Вивести пацієнтів, які були пов'язані з лікарями заданої спеціалізації.",
             Parameters = new List<QueryParameter>
             {
@@ -184,7 +184,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Пацієнти старші за заданий вік із записами візитів",
+            Title = "5. Пацієнти старші за заданий вік із записами візитів",
             Description = "Вивести пацієнтів, вік яких не менший за заданий, і кількість їхніх записів візитів.",
             Parameters = new List<QueryParameter>
             {
@@ -210,7 +210,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Лікарі з таким самим набором пацієнтів, як заданий лікар",
+            Title = "6. Лікарі з таким самим набором пацієнтів, як заданий лікар",
             Description = "Вивести лікарів, які мають точно таку саму множину пацієнтів у таблиці прийомів або процедур, як вибраний лікар.",
             Parameters = new List<QueryParameter>
             {
@@ -263,7 +263,7 @@ public static class QueryConfigs
     {
         return new QueryConfig
         {
-            Title = "Пари лікарів з однаковою множиною пацієнтів",
+            Title = "7. Пари лікарів з однаковою множиною пацієнтів",
             Description = "Вивести пари лікарів, які мають однакову множину пацієнтів у таблиці прийомів або процедур.",
             Sql = """
                 SELECT
