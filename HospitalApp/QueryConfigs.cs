@@ -134,7 +134,7 @@ public static class QueryConfigs
         return new QueryConfig
         {
             Title = "3. Прийоми у кабінетах із заданим обладнанням",
-            Description = "Вивести прийоми або процедури, що проводяться в кабінетах, обладнання яких містить введений текст.",
+            Description = "Вивести прийоми, що проводяться в кабінетах, обладнання яких містить введений текст.",
             Parameters = new List<QueryParameter>
             {
                 TextParameter("equipment_text", "Текст обладнання")
@@ -211,7 +211,7 @@ public static class QueryConfigs
         return new QueryConfig
         {
             Title = "6. Лікарі з таким самим набором пацієнтів, як заданий лікар",
-            Description = "Вивести лікарів, які мають точно таку саму множину пацієнтів у таблиці прийомів або процедур, як вибраний лікар.",
+            Description = "Вивести лікарів, які мають точно таку саму множину пацієнтів у таблиці прийомів, як вибраний лікар.",
             Parameters = new List<QueryParameter>
             {
                 ForeignKeyParameter("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name")
@@ -264,7 +264,7 @@ public static class QueryConfigs
         return new QueryConfig
         {
             Title = "7. Пари лікарів з однаковою множиною пацієнтів",
-            Description = "Вивести пари лікарів, які мають однакову множину пацієнтів у таблиці прийомів або процедур.",
+            Description = "Вивести пари лікарів, які мають однакову множину пацієнтів у таблиці прийомів.",
             Sql = """
                 SELECT
                     d1.passport AS "Паспорт лікаря 1",

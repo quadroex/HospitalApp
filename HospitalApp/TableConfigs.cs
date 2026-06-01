@@ -333,7 +333,7 @@ public static class TableConfigs
     {
         return new TableConfig
         {
-            Title = "Прийоми / процедури",
+            Title = "Прийоми",
             TableName = "appointments",
             SelectSql = """
                 SELECT
