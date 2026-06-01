@@ -19,9 +19,7 @@ public static class QueryConfigs
         """;
 
     private static string RoomsLookupSql => """
-        SELECT
-            number,
-            number AS room_label
+        SELECT number
         FROM rooms
         ORDER BY number
         """;
@@ -34,7 +32,7 @@ public static class QueryConfigs
     ConsultationsByDoctorDepartment(),
     PatientsBornBeforeDateWithVisitCount(),
     DoctorsWithSamePatientsAsSelectedDoctor(),
-    PatientsSeenByAllDoctorsInDepartment()
+    PatientsSeenByAllDoctorsInDepartment()//, task()
     };
 
     private static QueryParameter TextParameter(string name, string label)
@@ -150,7 +148,7 @@ public static class QueryConfigs
             Parameters = new List<QueryParameter>
         {
             ForeignKeyParameter("department_name", "Відділення", DepartmentsLookupSql, "name", "name"),
-            ForeignKeyParameter("room_number", "Кабінет", RoomsLookupSql, "number", "room_label")
+            ForeignKeyParameter("room_number", "Кабінет", RoomsLookupSql, "number", "number")
         },
             Sql = """
             SELECT
@@ -323,6 +321,23 @@ public static class QueryConfigs
                     )
               )
             ORDER BY p.last_name, p.first_name, p.middle_name;
+            """
+        };
+    }
+    private static QueryConfig task()
+    {
+        return new QueryConfig
+        {
+            Title = "8. ",
+            Description = "",
+            Parameters = new List<QueryParameter>
+        {
+            //ForeignKeyParameter("department_name", "Відділення", DepartmentsLookupSql, "name", "name")
+        },
+            Sql = """
+            SELECT
+                
+                ;
             """
         };
     }
