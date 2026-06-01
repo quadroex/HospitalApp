@@ -46,7 +46,7 @@ public sealed class TableForm : Form
         var headerCard = UiTheme.CreateCardPanel();
         headerCard.Dock = DockStyle.Fill;
         headerCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
-        headerCard.Padding = new Padding(18, 6, 18, 6);
+        headerCard.Padding = new Padding(24, 6, 24, 6);
 
         var headerLayout = new TableLayoutPanel
         {
@@ -55,7 +55,7 @@ public sealed class TableForm : Form
             RowCount = 2
         };
         UiTheme.ApplyTableLayoutDefaults(headerLayout);
-        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
         headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var title = UiTheme.CreateHeaderLabel(_config.Title);
@@ -84,7 +84,7 @@ public sealed class TableForm : Form
         var editButton = new Button
         {
             Text = "Редагувати",
-            Width = 145,
+            Width = 135,
             Enabled = _config.AllowEdit
         };
         UiTheme.StyleSecondaryButton(editButton);
@@ -120,7 +120,7 @@ public sealed class TableForm : Form
         var toolbarCard = UiTheme.CreateCardPanel();
         toolbarCard.Dock = DockStyle.Fill;
         toolbarCard.Margin = new Padding(0, 0, 0, UiTheme.Spacing);
-        toolbarCard.Padding = new Padding(10, 7, 10, 7);
+        toolbarCard.Padding = new Padding(20, 0, 20, 0);
 
         var buttons = new FlowLayoutPanel
         {

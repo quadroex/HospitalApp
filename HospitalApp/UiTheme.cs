@@ -37,9 +37,9 @@ public static class UiTheme
     public static readonly Font GroupFont = new("Segoe UI", 9.5F, FontStyle.Bold);
 
     public const int ButtonHeight = 42;
-    public const int ControlHeight = 34;
-    public const int Spacing = 12;
-    public const int FormPadding = 18;
+    public const int ControlHeight = 42;
+    public const int Spacing = 0;
+    public const int FormPadding = 0;
 
     public static void ApplyFormTheme(Form form)
     {
