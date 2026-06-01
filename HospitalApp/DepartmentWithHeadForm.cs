@@ -199,10 +199,19 @@ public sealed class DepartmentWithHeadForm : Form
         var firstName = RequiredText(_firstNameBox, "Ім'я");
         var specialization = RequiredText(_specializationBox, "Спеціалізація");
         var middleName = _middleNameBox.Text.Trim();
+        var floor = Convert.ToInt32(_floorBox.Value);
+
+        ValidationHelper.ValidateText("Назва відділення", departmentName, required: true, minLength: 2, maxLength: 100);
+        ValidationHelper.ValidateInteger("Поверх", floor, minValue: 1, maxValue: 200);
+        ValidationHelper.ValidateText("Паспорт", passport, required: true, minLength: 3, maxLength: 20);
+        ValidationHelper.ValidateText("Прізвище", lastName, required: true, minLength: 2, maxLength: 50);
+        ValidationHelper.ValidateText("Ім'я", firstName, required: true, minLength: 2, maxLength: 50);
+        ValidationHelper.ValidateText("По батькові", middleName, required: false, minLength: 2, maxLength: 50);
+        ValidationHelper.ValidateText("Спеціалізація", specialization, required: true, minLength: 2, maxLength: 100);
 
         return new DepartmentWithHeadValues(
             departmentName,
-            Convert.ToInt32(_floorBox.Value),
+            floor,
             passport,
             lastName,
             firstName,

@@ -24,6 +24,16 @@ public sealed class ColumnConfig
     public bool IsPrimaryKey { get; set; }
     public bool IsRequired { get; set; } = true;
     public LookupConfig? Lookup { get; set; }
+    public int? MinLength { get; set; }
+    public int? MaxLength { get; set; }
+    public int? MinValue { get; set; }
+    public int? MaxValue { get; set; }
+    public DateTime? MinDate { get; set; }
+    public bool MaxDateIsToday { get; set; }
+    public bool MinDateIsTomorrow { get; set; }
+    public string? RegexPattern { get; set; }
+    public string? RegexErrorMessage { get; set; }
+    public bool TrimText { get; set; } = true;
 }
 
 public sealed class TableConfig

@@ -250,7 +250,7 @@ public sealed class RowEditForm : Form
                 FieldKind.Date => ((DateTimePicker)control).Value.Date,
                 FieldKind.Time => ((DateTimePicker)control).Value.TimeOfDay,
                 FieldKind.ForeignKey => ((ComboBox)control).SelectedValue,
-                _ => ((TextBox)control).Text.Trim()
+                _ => column.TrimText ? ((TextBox)control).Text.Trim() : ((TextBox)control).Text
             };
 
             if (value is string text)
@@ -267,6 +267,7 @@ public sealed class RowEditForm : Form
             if (column.Kind == FieldKind.ForeignKey && value == null && column.IsRequired)
                 throw new InvalidOperationException($"Поле \"{column.Label}\" є обов'язковим.");
 
+            ValidationHelper.ValidateColumn(column, value, skipTomorrowRule: _editMode && column.IsPrimaryKey);
             result[column.Name] = value;
         }
 

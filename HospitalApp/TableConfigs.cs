@@ -15,7 +15,15 @@ public static class TableConfigs
         DoctorConsultations()
     };
 
-    private static ColumnConfig Text(string name, string label, bool pk = false, bool required = true)
+    private static ColumnConfig Text(
+        string name,
+        string label,
+        bool pk = false,
+        bool required = true,
+        int? minLength = null,
+        int? maxLength = null,
+        string? regexPattern = null,
+        string? regexErrorMessage = null)
     {
         return new ColumnConfig
         {
@@ -23,11 +31,21 @@ public static class TableConfigs
             Label = label,
             Kind = FieldKind.Text,
             IsPrimaryKey = pk,
-            IsRequired = required
+            IsRequired = required,
+            MinLength = minLength,
+            MaxLength = maxLength,
+            RegexPattern = regexPattern,
+            RegexErrorMessage = regexErrorMessage
         };
     }
 
-    private static ColumnConfig Int(string name, string label, bool pk = false, bool required = true)
+    private static ColumnConfig Int(
+        string name,
+        string label,
+        bool pk = false,
+        bool required = true,
+        int? minValue = null,
+        int? maxValue = null)
     {
         return new ColumnConfig
         {
@@ -35,11 +53,20 @@ public static class TableConfigs
             Label = label,
             Kind = FieldKind.Integer,
             IsPrimaryKey = pk,
-            IsRequired = required
+            IsRequired = required,
+            MinValue = minValue,
+            MaxValue = maxValue
         };
     }
 
-    private static ColumnConfig Date(string name, string label, bool pk = false, bool required = true)
+    private static ColumnConfig Date(
+        string name,
+        string label,
+        bool pk = false,
+        bool required = true,
+        DateTime? minDate = null,
+        bool maxDateIsToday = false,
+        bool minDateIsTomorrow = false)
     {
         return new ColumnConfig
         {
@@ -47,7 +74,10 @@ public static class TableConfigs
             Label = label,
             Kind = FieldKind.Date,
             IsPrimaryKey = pk,
-            IsRequired = required
+            IsRequired = required,
+            MinDate = minDate,
+            MaxDateIsToday = maxDateIsToday,
+            MinDateIsTomorrow = minDateIsTomorrow
         };
     }
 
@@ -143,8 +173,8 @@ public static class TableConfigs
             },
             Columns = new List<ColumnConfig>
             {
-                Text("name", "Назва", pk: true),
-                Int("floor", "Поверх"),
+                Text("name", "Назва", pk: true, minLength: 2, maxLength: 100),
+                Int("floor", "Поверх", minValue: 1, maxValue: 200),
                 Fk("head_passport", "Завідувач", DoctorsLookupSql, "passport", "full_name")
             }
         };
@@ -172,11 +202,11 @@ public static class TableConfigs
             },
             Columns = new List<ColumnConfig>
             {
-                Text("passport", "Паспорт", pk: true),
-                Text("last_name", "Прізвище"),
-                Text("first_name", "Ім'я"),
-                Text("middle_name", "По батькові", required: false),
-                Text("specialization", "Спеціалізація"),
+                Text("passport", "Паспорт", pk: true, minLength: 3, maxLength: 20),
+                Text("last_name", "Прізвище", minLength: 2, maxLength: 50),
+                Text("first_name", "Ім'я", minLength: 2, maxLength: 50),
+                Text("middle_name", "По батькові", required: false, minLength: 2, maxLength: 50),
+                Text("specialization", "Спеціалізація", minLength: 2, maxLength: 100),
                 Fk("department_name", "Відділення", DepartmentsLookupSql, "name", "name")
             }
         };
@@ -206,7 +236,7 @@ public static class TableConfigs
             Columns = new List<ColumnConfig>
             {
                 Fk("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name", pk: true),
-                Int("districts_count", "Кількість дільниць")
+                Int("districts_count", "Кількість дільниць", minValue: 0, maxValue: 100)
             }
         };
     }
@@ -235,7 +265,7 @@ public static class TableConfigs
             Columns = new List<ColumnConfig>
             {
                 Fk("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name", pk: true),
-                Text("category", "Категорія операцій")
+                Text("category", "Категорія операцій", minLength: 2, maxLength: 100)
             }
         };
     }
@@ -261,11 +291,11 @@ public static class TableConfigs
             },
             Columns = new List<ColumnConfig>
             {
-                Text("card_number", "Номер картки", pk: true),
-                Text("last_name", "Прізвище"),
-                Text("first_name", "Ім'я"),
-                Text("middle_name", "По батькові", required: false),
-                Date("birth_date", "Дата народження")
+                Text("card_number", "Номер картки", pk: true, minLength: 3, maxLength: 20),
+                Text("last_name", "Прізвище", minLength: 2, maxLength: 50),
+                Text("first_name", "Ім'я", minLength: 2, maxLength: 50),
+                Text("middle_name", "По батькові", required: false, minLength: 2, maxLength: 50),
+                Date("birth_date", "Дата народження", minDate: new DateTime(1900, 1, 1), maxDateIsToday: true)
             }
         };
     }
@@ -298,9 +328,9 @@ public static class TableConfigs
             Columns = new List<ColumnConfig>
             {
                 Fk("patient_card_number", "Пацієнт", PatientsLookupSql, "card_number", "full_name", pk: true),
-                Date("visit_date", "Дата візиту", pk: true),
+                Date("visit_date", "Дата візиту", pk: true, minDateIsTomorrow: true),
                 Time("visit_time", "Час візиту", pk: true),
-                Text("complaints", "Скарги", required: false)
+                Text("complaints", "Скарги", required: false, maxLength: 500)
             }
         };
     }
@@ -323,8 +353,8 @@ public static class TableConfigs
             },
             Columns = new List<ColumnConfig>
             {
-                Text("number", "Номер кабінету", pk: true),
-                Text("equipment_type", "Обладнання")
+                Text("number", "Номер кабінету", pk: true, minLength: 1, maxLength: 20),
+                Text("equipment_type", "Обладнання", minLength: 2, maxLength: 255)
             }
         };
     }

@@ -206,6 +206,7 @@ public sealed class TableForm : Form
                 return;
 
             var values = dialog.Values;
+            BusinessValidator.ValidateBeforeInsert(_config, values);
 
             var columns = _config.Columns;
             var tableName = QuoteIdentifier(_config.TableName);
@@ -244,6 +245,7 @@ public sealed class TableForm : Form
                 return;
 
             var values = dialog.Values;
+            BusinessValidator.ValidateBeforeUpdate(_config, values, selectedRow);
 
             var updateColumns = _config.Columns
                 .Where(column => !column.IsPrimaryKey)
