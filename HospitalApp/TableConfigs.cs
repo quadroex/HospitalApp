@@ -372,7 +372,7 @@ public static class TableConfigs
                     a.patient_card_number,
                     p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS patient_full_name,
                     a.room_number,
-                    r.number || ' — ' || r.equipment_type AS room_label
+                    r.number || ' - ' || r.equipment_type AS room_label
                 FROM appointments a
                 JOIN doctors d ON d.passport = a.doctor_passport
                 JOIN patients p ON p.card_number = a.patient_card_number

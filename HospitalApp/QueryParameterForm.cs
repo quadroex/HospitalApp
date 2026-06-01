@@ -151,6 +151,8 @@ public sealed class QueryParameterForm : Form
 
         var data = Db.GetTable(parameter.Lookup.Sql);
 
+        if (parameter.Lookup.DisplayMember == "doctor_display") AddDoctorDisplayColumn(data);
+
         var comboBox = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
@@ -160,6 +162,28 @@ public sealed class QueryParameterForm : Form
         };
 
         return comboBox;
+    }
+
+    private static void AddDoctorDisplayColumn(DataTable table)
+    {
+        if (table.Columns.Contains("doctor_display"))
+            return;
+
+        if (!table.Columns.Contains("passport") || !table.Columns.Contains("last_name"))
+            return;
+
+        table.Columns.Add("doctor_display", typeof(string));
+
+        foreach (DataRow row in table.Rows)
+        {
+            var passport = row["passport"]?.ToString() ?? "";
+            var lastName = row["last_name"]?.ToString() ?? "";
+            var firstName = table.Columns.Contains("first_name")
+                ? row["first_name"]?.ToString() ?? ""
+                : "";
+
+            row["doctor_display"] = $"{passport} - {lastName} {firstName}".Trim();
+        }
     }
 
     private Dictionary<string, object?> CollectValues()

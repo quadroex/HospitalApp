@@ -11,20 +11,30 @@ public static class QueryConfigs
     private static string DoctorsLookupSql => """
         SELECT
             passport,
-            passport || ' - ' || last_name || ' ' || first_name || COALESCE(' ' || middle_name, '') AS full_name
+            last_name,
+            first_name,
+            middle_name
         FROM doctors
         ORDER BY last_name, first_name, middle_name
         """;
 
+    private static string RoomsLookupSql => """
+        SELECT
+            number,
+            number AS room_label
+        FROM rooms
+        ORDER BY number
+        """;
+
     public static List<QueryConfig> All => new()
     {
-        DoctorsByDepartment(),
-        PatientsWithVisitsAfterDate(),
-        AppointmentsByEquipment(),
-        PatientsByDoctorSpecialization(),
-        OlderPatientsWithVisitCount(),
-        DoctorsWithSamePatientsAsSelectedDoctor(),
-        DoctorPairsWithSamePatients()
+    DoctorsByDepartment(),
+    PatientsWithVisitsAfterDate(),
+    AppointmentsByDepartmentAndRoom(),
+    ConsultationsByDoctorDepartment(),
+    PatientsBornBeforeDateWithVisitCount(),
+    DoctorsWithSamePatientsAsSelectedDoctor(),
+    PatientsSeenByAllDoctorsInDepartment()
     };
 
     private static QueryParameter TextParameter(string name, string label)
@@ -85,21 +95,21 @@ public static class QueryConfigs
             Title = "1. Лікарі заданого відділення",
             Description = "Вивести лікарів, які працюють у вибраному відділенні.",
             Parameters = new List<QueryParameter>
-            {
-                ForeignKeyParameter("department_name", "Відділення", DepartmentsLookupSql, "name", "name")
-            },
+        {
+            ForeignKeyParameter("department_name", "Відділення", DepartmentsLookupSql, "name", "name")
+        },
             Sql = """
-                SELECT
-                    d.passport AS "Паспорт лікаря",
-                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS "ПІБ лікаря",
-                    d.specialization AS "Спеціалізація",
-                    dep.name AS "Відділення",
-                    dep.floor AS "Поверх"
-                FROM doctors d
-                JOIN departments dep ON dep.name = d.department_name
-                WHERE dep.name = @department_name
-                ORDER BY d.last_name, d.first_name, d.middle_name;
-                """
+            SELECT
+                d.passport AS "Паспорт лікаря",
+                d.last_name AS "Прізвище",
+                d.first_name AS "Ім'я",
+                d.middle_name AS "По батькові",
+                d.specialization AS "Спеціалізація"
+            FROM doctors d
+            INNER JOIN departments dep ON dep.name = d.department_name
+            WHERE dep.name = @department_name
+            ORDER BY d.last_name, d.first_name, d.middle_name;
+            """
         };
     }
 
@@ -108,101 +118,122 @@ public static class QueryConfigs
         return new QueryConfig
         {
             Title = "2. Пацієнти з візитами після заданої дати",
-            Description = "Вивести пацієнтів та їхні записи візитів, дата яких не раніше заданої користувачем.",
+            Description = "Вивести пацієнтів та їхні записи візитів, дата яких не раніше заданої.",
             Parameters = new List<QueryParameter>
-            {
-                DateParameter("start_date", "Дата початку")
-            },
+        {
+            DateParameter("start_date", "Дата початку")
+        },
             Sql = """
-                SELECT
-                    p.card_number AS "Номер картки",
-                    p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS "ПІБ пацієнта",
-                    p.birth_date AS "Дата народження",
-                    vr.visit_date AS "Дата візиту",
-                    vr.visit_time AS "Час візиту",
-                    vr.complaints AS "Скарги"
-                FROM patients p
-                JOIN visit_records vr ON vr.patient_card_number = p.card_number
-                WHERE vr.visit_date >= @start_date
-                ORDER BY vr.visit_date, vr.visit_time, p.last_name;
-                """
+            SELECT
+                p.card_number AS "Номер картки",
+                p.last_name AS "Прізвище",
+                p.first_name AS "Ім'я",
+                p.middle_name AS "По батькові",
+                p.birth_date AS "Дата народження",
+                vr.visit_date AS "Дата візиту",
+                vr.visit_time AS "Час візиту",
+                vr.complaints AS "Скарги"
+            FROM patients p
+            INNER JOIN visit_records vr ON vr.patient_card_number = p.card_number
+            WHERE vr.visit_date >= @start_date
+            ORDER BY vr.visit_date, vr.visit_time, p.last_name;
+            """
         };
     }
 
-    private static QueryConfig AppointmentsByEquipment()
+    private static QueryConfig AppointmentsByDepartmentAndRoom()
     {
         return new QueryConfig
         {
-            Title = "3. Прийоми у кабінетах із заданим обладнанням",
-            Description = "Вивести прийоми, що проводяться в кабінетах, обладнання яких містить введений текст.",
+            Title = "3. Прийоми лікарів заданого відділення у заданому кабінеті",
+            Description = "Вивести прийоми, у яких лікар працює у вибраному відділенні, а прийом проходить у вибраному кабінеті.",
             Parameters = new List<QueryParameter>
-            {
-                TextParameter("equipment_text", "Текст обладнання")
-            },
+        {
+            ForeignKeyParameter("department_name", "Відділення", DepartmentsLookupSql, "name", "name"),
+            ForeignKeyParameter("room_number", "Кабінет", RoomsLookupSql, "number", "room_label")
+        },
             Sql = """
-                SELECT
-                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS "Лікар",
-                    p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS "Пацієнт",
-                    r.number AS "Кабінет",
-                    r.equipment_type AS "Обладнання"
-                FROM appointments a
-                JOIN doctors d ON d.passport = a.doctor_passport
-                JOIN patients p ON p.card_number = a.patient_card_number
-                JOIN rooms r ON r.number = a.room_number
-                WHERE LOWER(r.equipment_type) LIKE '%' || LOWER(@equipment_text) || '%'
-                ORDER BY r.number, d.last_name, p.last_name;
-                """
+            SELECT
+                d.last_name AS "Прізвище лікаря",
+                d.first_name AS "Ім'я лікаря",
+                d.middle_name AS "По батькові лікаря",
+                d.specialization AS "Спеціалізація",
+                dep.name AS "Відділення",
+                p.card_number AS "Номер картки",
+                p.last_name AS "Прізвище пацієнта",
+                p.first_name AS "Ім'я пацієнта",
+                p.middle_name AS "По батькові пацієнта",
+                r.number AS "Кабінет",
+                r.equipment_type AS "Обладнання"
+            FROM appointments a
+            INNER JOIN doctors d ON d.passport = a.doctor_passport
+            INNER JOIN departments dep ON dep.name = d.department_name
+            INNER JOIN patients p ON p.card_number = a.patient_card_number
+            INNER JOIN rooms r ON r.number = a.room_number
+            WHERE dep.name = @department_name
+              AND r.number = @room_number
+            ORDER BY d.last_name, d.first_name, p.last_name, p.first_name;
+            """
         };
     }
 
-    private static QueryConfig PatientsByDoctorSpecialization()
+    private static QueryConfig ConsultationsByDoctorDepartment()
     {
         return new QueryConfig
         {
-            Title = "4. Пацієнти лікарів заданої спеціалізації",
-            Description = "Вивести пацієнтів, які були пов'язані з лікарями заданої спеціалізації.",
+            Title = "4. Консультації лікарів заданого відділення",
+            Description = "Вивести консультації, у яких основний лікар працює у вибраному відділенні.",
             Parameters = new List<QueryParameter>
-            {
-                TextParameter("specialization_text", "Текст спеціалізації")
-            },
+        {
+            ForeignKeyParameter("department_name", "Відділення лікаря", DepartmentsLookupSql, "name", "name")
+        },
             Sql = """
-                SELECT DISTINCT
-                    p.card_number AS "Номер картки",
-                    p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS "Пацієнт",
-                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS "Лікар",
-                    d.specialization AS "Спеціалізація"
-                FROM patients p
-                JOIN appointments a ON a.patient_card_number = p.card_number
-                JOIN doctors d ON d.passport = a.doctor_passport
-                WHERE LOWER(d.specialization) LIKE '%' || LOWER(@specialization_text) || '%'
-                ORDER BY p.card_number, d.specialization;
-                """
+            SELECT
+                d1.last_name AS "Прізвище лікаря",
+                d1.first_name AS "Ім'я лікаря",
+                d1.middle_name AS "По батькові лікаря",
+                d1.specialization AS "Спеціалізація лікаря",
+                dep1.name AS "Відділення лікаря",
+                d2.last_name AS "Прізвище консультанта",
+                d2.first_name AS "Ім'я консультанта",
+                d2.middle_name AS "По батькові консультанта",
+                d2.specialization AS "Спеціалізація консультанта",
+                dep2.name AS "Відділення консультанта"
+            FROM doctor_consultations dc
+            INNER JOIN doctors d1 ON d1.passport = dc.doctor_passport
+            INNER JOIN departments dep1 ON dep1.name = d1.department_name
+            INNER JOIN doctors d2 ON d2.passport = dc.consultant_passport
+            INNER JOIN departments dep2 ON dep2.name = d2.department_name
+            WHERE dep1.name = @department_name
+            ORDER BY d1.last_name, d1.first_name, d2.last_name, d2.first_name;
+            """
         };
     }
 
-    private static QueryConfig OlderPatientsWithVisitCount()
+    private static QueryConfig PatientsBornBeforeDateWithVisitCount()
     {
         return new QueryConfig
         {
-            Title = "5. Пацієнти старші за заданий вік із записами візитів",
-            Description = "Вивести пацієнтів, вік яких не менший за заданий, і кількість їхніх записів візитів.",
+            Title = "5. Пацієнти, народжені не пізніше заданої дати, із записами візитів",
+            Description = "Вивести пацієнтів, дата народження яких не пізніша за задану, і кількість їхніх записів візитів.",
             Parameters = new List<QueryParameter>
-            {
-                IntegerParameter("min_age", "Мінімальний вік")
-            },
+        {
+            DateParameter("max_birth_date", "Дата народження не пізніше")
+        },
             Sql = """
-                SELECT
-                    p.card_number AS "Номер картки",
-                    p.last_name || ' ' || p.first_name || COALESCE(' ' || p.middle_name, '') AS "Пацієнт",
-                    p.birth_date AS "Дата народження",
-                    EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.birth_date))::int AS "Вік",
-                    COUNT(vr.*) AS "Кількість записів візитів"
-                FROM patients p
-                JOIN visit_records vr ON vr.patient_card_number = p.card_number
-                WHERE EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.birth_date))::int >= @min_age
-                GROUP BY p.card_number, p.last_name, p.first_name, p.middle_name, p.birth_date
-                ORDER BY "Вік" DESC, p.last_name;
-                """
+            SELECT
+                p.card_number AS "Номер картки",
+                p.last_name AS "Прізвище",
+                p.first_name AS "Ім'я",
+                p.middle_name AS "По батькові",
+                p.birth_date AS "Дата народження",
+                COUNT(vr.visit_date) AS "Кількість записів візитів"
+            FROM patients p
+            INNER JOIN visit_records vr ON vr.patient_card_number = p.card_number
+            WHERE p.birth_date <= @max_birth_date
+            GROUP BY p.card_number, p.last_name, p.first_name, p.middle_name, p.birth_date
+            ORDER BY p.birth_date, p.last_name, p.first_name;
+            """
         };
     }
 
@@ -213,99 +244,86 @@ public static class QueryConfigs
             Title = "6. Лікарі з таким самим набором пацієнтів, як заданий лікар",
             Description = "Вивести лікарів, які мають точно таку саму множину пацієнтів у таблиці прийомів, як вибраний лікар.",
             Parameters = new List<QueryParameter>
-            {
-                ForeignKeyParameter("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "full_name")
-            },
+        {
+            ForeignKeyParameter("doctor_passport", "Лікар", DoctorsLookupSql, "passport", "doctor_display")
+        },
             Sql = """
-                SELECT
-                    d.passport AS "Паспорт лікаря",
-                    d.last_name || ' ' || d.first_name || COALESCE(' ' || d.middle_name, '') AS "Лікар",
-                    d.specialization AS "Спеціалізація"
-                FROM doctors d
-                WHERE d.passport <> @doctor_passport
-                AND NOT EXISTS (
-                    (
-                        SELECT a1.patient_card_number
-                        FROM appointments a1
-                        WHERE a1.doctor_passport = @doctor_passport
-                    )
-                    EXCEPT
-                    (
+            SELECT
+                d.passport AS "Паспорт лікаря",
+                d.last_name AS "Прізвище",
+                d.first_name AS "Ім'я",
+                d.middle_name AS "По батькові",
+                d.specialization AS "Спеціалізація"
+            FROM doctors d
+            WHERE NOT d.passport = @doctor_passport
+              AND EXISTS (
+                  SELECT a0.patient_card_number
+                  FROM appointments a0
+                  WHERE a0.doctor_passport = @doctor_passport
+              )
+              AND NOT EXISTS (
+                  SELECT a1.patient_card_number
+                  FROM appointments a1
+                  WHERE a1.doctor_passport = @doctor_passport
+                    AND NOT EXISTS (
                         SELECT a2.patient_card_number
                         FROM appointments a2
                         WHERE a2.doctor_passport = d.passport
+                          AND a2.patient_card_number = a1.patient_card_number
                     )
-                )
-                AND NOT EXISTS (
-                    (
-                        SELECT a2.patient_card_number
-                        FROM appointments a2
-                        WHERE a2.doctor_passport = d.passport
+              )
+              AND NOT EXISTS (
+                  SELECT a3.patient_card_number
+                  FROM appointments a3
+                  WHERE a3.doctor_passport = d.passport
+                    AND NOT EXISTS (
+                        SELECT a4.patient_card_number
+                        FROM appointments a4
+                        WHERE a4.doctor_passport = @doctor_passport
+                          AND a4.patient_card_number = a3.patient_card_number
                     )
-                    EXCEPT
-                    (
-                        SELECT a1.patient_card_number
-                        FROM appointments a1
-                        WHERE a1.doctor_passport = @doctor_passport
-                    )
-                )
-                AND EXISTS (
-                    SELECT 1
-                    FROM appointments ax
-                    WHERE ax.doctor_passport = @doctor_passport
-                )
-                ORDER BY d.last_name, d.first_name;
-                """
+              )
+            ORDER BY d.last_name, d.first_name, d.middle_name;
+            """
         };
     }
 
-    private static QueryConfig DoctorPairsWithSamePatients()
+    private static QueryConfig PatientsSeenByAllDoctorsInDepartment()
     {
         return new QueryConfig
         {
-            Title = "7. Пари лікарів з однаковою множиною пацієнтів",
-            Description = "Вивести пари лікарів, які мають однакову множину пацієнтів у таблиці прийомів.",
+            Title = "7. Пацієнти, які були на прийомі у всіх лікарів заданого відділення",
+            Description = "Вивести пацієнтів, які мали прийом у кожного лікаря вибраного відділення.",
+            Parameters = new List<QueryParameter>
+        {
+            ForeignKeyParameter("department_name", "Відділення", DepartmentsLookupSql, "name", "name")
+        },
             Sql = """
-                SELECT
-                    d1.passport AS "Паспорт лікаря 1",
-                    d1.last_name || ' ' || d1.first_name || COALESCE(' ' || d1.middle_name, '') AS "Лікар 1",
-                    d2.passport AS "Паспорт лікаря 2",
-                    d2.last_name || ' ' || d2.first_name || COALESCE(' ' || d2.middle_name, '') AS "Лікар 2"
-                FROM doctors d1
-                JOIN doctors d2 ON d1.passport < d2.passport
-                WHERE NOT EXISTS (
-                    (
-                        SELECT a1.patient_card_number
-                        FROM appointments a1
-                        WHERE a1.doctor_passport = d1.passport
+            SELECT
+                p.card_number AS "Номер картки",
+                p.last_name AS "Прізвище",
+                p.first_name AS "Ім'я",
+                p.middle_name AS "По батькові",
+                p.birth_date AS "Дата народження"
+            FROM patients p
+            WHERE EXISTS (
+                SELECT d0.passport
+                FROM doctors d0
+                WHERE d0.department_name = @department_name
+            )
+              AND NOT EXISTS (
+                  SELECT d1.passport
+                  FROM doctors d1
+                  WHERE d1.department_name = @department_name
+                    AND NOT EXISTS (
+                        SELECT a.patient_card_number
+                        FROM appointments a
+                        WHERE a.patient_card_number = p.card_number
+                          AND a.doctor_passport = d1.passport
                     )
-                    EXCEPT
-                    (
-                        SELECT a2.patient_card_number
-                        FROM appointments a2
-                        WHERE a2.doctor_passport = d2.passport
-                    )
-                )
-                AND NOT EXISTS (
-                    (
-                        SELECT a2.patient_card_number
-                        FROM appointments a2
-                        WHERE a2.doctor_passport = d2.passport
-                    )
-                    EXCEPT
-                    (
-                        SELECT a1.patient_card_number
-                        FROM appointments a1
-                        WHERE a1.doctor_passport = d1.passport
-                    )
-                )
-                AND EXISTS (
-                    SELECT 1
-                    FROM appointments ax
-                    WHERE ax.doctor_passport = d1.passport
-                )
-                ORDER BY d1.passport, d2.passport;
-                """
+              )
+            ORDER BY p.last_name, p.first_name, p.middle_name;
+            """
         };
     }
 }
